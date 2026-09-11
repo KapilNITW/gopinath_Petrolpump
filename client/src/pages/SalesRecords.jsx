@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getSalesByDate } from "../services/salesService";
 import { useT } from "../i18n/LanguageContext";
+import { getLocalDate } from "../utils/date";
 
 const API_URL = "http://localhost:5000/api/sales";
 
@@ -8,9 +9,7 @@ const API_URL = "http://localhost:5000/api/sales";
 function SalesRecords() {
 
     const [saleDate, setSaleDate] = useState(
-        new Date()
-            .toISOString()
-            .split("T")[0]
+        getLocalDate()
     );
 
     const [sales, setSales] = useState([]);

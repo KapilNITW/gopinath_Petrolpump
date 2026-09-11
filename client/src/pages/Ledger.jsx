@@ -5,6 +5,7 @@ import {
     printLedger
 } from "../utils/ledgerExport";
 import { useT } from "../i18n/LanguageContext";
+import { getLocalDate } from "../utils/date";
 
 
 const API_URL = "http://localhost:5000/api";
@@ -392,7 +393,7 @@ function CustomerList({ selected, onSelect, refreshTrigger }) {
 // ======================================================
 
 const emptySaleForm = () => ({
-    saleDate:     new Date().toISOString().split("T")[0],
+    saleDate:     getLocalDate(),
     billNo:       "",
     petrolAmount: "",
     dieselAmount: "",
@@ -400,7 +401,7 @@ const emptySaleForm = () => ({
 });
 
 const emptyCreditForm = () => ({
-    creditDate:    new Date().toISOString().split("T")[0],
+    creditDate:    getLocalDate(),
     totalAmount:   "",
     paymentMethod: "CASH",
     ledger:        true

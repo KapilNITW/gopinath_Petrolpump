@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import CalculatorModal from "../components/CalculatorModal";
+import LedgerNamePicker from "../components/LedgerNamePicker";
 import { useT } from "../i18n/LanguageContext";
+import { getLocalDate } from "../utils/date";
 
 
 const API_URL = "http://localhost:5000/api";
@@ -10,8 +12,7 @@ function DailySettlement() {
 
     const t = useT();
 
-    const today =
-        new Date().toISOString().split("T")[0];
+    const today = getLocalDate();
 
 
     const [date, setDate] =
@@ -1453,20 +1454,26 @@ function DailySettlement() {
 
                                             <td>
 
-                                                <input
-                                                    type="text"
-                                                    className="form-control"
-                                                    placeholder={t("Customer name")}
+                                                <LedgerNamePicker
+
+                                                    ledger={
+                                                        Boolean(
+                                                            item.ledger
+                                                        )
+                                                    }
+
                                                     value={
                                                         item.customerName
                                                     }
-                                                    onChange={(e) =>
+
+                                                    onChange={(v) =>
                                                         updateUdhariSale(
                                                             index,
                                                             "customerName",
-                                                            e.target.value
+                                                            v
                                                         )
                                                     }
+
                                                 />
 
                                             </td>
@@ -1705,20 +1712,26 @@ function DailySettlement() {
 
                                             <td>
 
-                                                <input
-                                                    type="text"
-                                                    className="form-control"
-                                                    placeholder={t("Customer name")}
+                                                <LedgerNamePicker
+
+                                                    ledger={
+                                                        Boolean(
+                                                            item.ledger
+                                                        )
+                                                    }
+
                                                     value={
                                                         item.customerName
                                                     }
-                                                    onChange={(e) =>
+
+                                                    onChange={(v) =>
                                                         updateUdhariCredit(
                                                             index,
                                                             "customerName",
-                                                            e.target.value
+                                                            v
                                                         )
                                                     }
+
                                                 />
 
                                             </td>
