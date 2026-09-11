@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
+import CalculatorModal from "../components/CalculatorModal";
+import { useT } from "../i18n/LanguageContext";
 
 
 const API_URL = "http://localhost:5000/api";
 
 
 function DailySettlement() {
+
+    const t = useT();
 
     const today =
         new Date().toISOString().split("T")[0];
@@ -73,6 +77,10 @@ function DailySettlement() {
         useState(false);
 
 
+    const [showCalculator, setShowCalculator] =
+        useState(false);
+
+
     const [saving, setSaving] =
         useState(false);
 
@@ -114,7 +122,7 @@ function DailySettlement() {
 
                 throw new Error(
                     result.message ||
-                    "Failed to fetch settlement"
+                    t("Failed to fetch settlement")
                 );
 
             }
@@ -173,7 +181,7 @@ function DailySettlement() {
 
             setError(
                 err.message ||
-                "Failed to load settlement"
+                t("Failed to load settlement")
             );
 
         } finally {
@@ -202,7 +210,7 @@ function DailySettlement() {
 
                 throw new Error(
                     result.message ||
-                    "Failed to fetch udhari"
+                    t("Failed to fetch udhari")
                 );
 
             }
@@ -290,7 +298,7 @@ function DailySettlement() {
 
             setError(
                 err.message ||
-                "Failed to load udhari"
+                t("Failed to load udhari")
             );
 
         }
@@ -619,7 +627,7 @@ function DailySettlement() {
 
                     throw new Error(
                         result.message ||
-                        "Failed to delete udhari"
+                        t("Failed to delete udhari")
                     );
 
                 }
@@ -657,7 +665,7 @@ function DailySettlement() {
 
             setError(
                 err.message ||
-                "Failed to delete udhari"
+                t("Failed to delete udhari")
             );
 
         }
@@ -731,7 +739,7 @@ function DailySettlement() {
 
                     throw new Error(
                         result.message ||
-                        "Failed to delete udhari credit"
+                        t("Failed to delete udhari credit")
                     );
 
                 }
@@ -767,7 +775,7 @@ function DailySettlement() {
 
             setError(
                 err.message ||
-                "Failed to delete udhari credit"
+                t("Failed to delete udhari credit")
             );
 
         }
@@ -795,7 +803,7 @@ function DailySettlement() {
             if (cash < 0 || online < 0) {
 
                 throw new Error(
-                    "Sales amounts cannot be negative."
+                    t("Sales amounts cannot be negative.")
                 );
 
             }
@@ -807,7 +815,7 @@ function DailySettlement() {
             ) {
 
                 throw new Error(
-                    "Cash + Online cannot be greater than today's sales."
+                    t("Cash + Online cannot be greater than today's sales.")
                 );
 
             }
@@ -816,7 +824,7 @@ function DailySettlement() {
             if (todayUdhari < 0 || cashCredit < 0) {
 
                 throw new Error(
-                    "Udhari amounts cannot be negative."
+                    t("Udhari amounts cannot be negative.")
                 );
 
             }
@@ -862,7 +870,7 @@ function DailySettlement() {
                 if (!checkResponse.ok) {
                     throw new Error(
                         checkResult.message ||
-                        "Ledger validation failed"
+                        t("Ledger validation failed")
                     );
                 }
 
@@ -874,7 +882,7 @@ function DailySettlement() {
                         checkResult.missing.join(", ");
 
                     throw new Error(
-                        `Ledger me nahi hai: ${missingList}. Pehle Ledger page pe jaake inhe add karein.`
+                        t("Ledger me nahi hai: {missingList}. Pehle Ledger page pe jaake inhe add karein.", { missingList })
                     );
                 }
 
@@ -1011,7 +1019,7 @@ function DailySettlement() {
 
                     throw new Error(
                         result.message ||
-                        "Failed to save udhari"
+                        t("Failed to save udhari")
                     );
 
                 }
@@ -1061,7 +1069,7 @@ function DailySettlement() {
 
                     throw new Error(
                         result.message ||
-                        "Failed to save udhari credit"
+                        t("Failed to save udhari credit")
                     );
 
                 }
@@ -1106,14 +1114,14 @@ function DailySettlement() {
 
                 throw new Error(
                     result.message ||
-                    "Failed to save settlement"
+                    t("Failed to save settlement")
                 );
 
             }
 
 
             setMessage(
-                "Daily settlement saved successfully."
+                t("Daily settlement saved successfully.")
             );
 
 
@@ -1127,7 +1135,7 @@ function DailySettlement() {
 
             setError(
                 err.message ||
-                "Failed to save settlement"
+                t("Failed to save settlement")
             );
 
         } finally {
@@ -1164,30 +1172,53 @@ function DailySettlement() {
                 <div>
 
                     <h2 className="mb-1">
-                        Daily Settlement
+                        {t("Daily Settlement")}
                     </h2>
 
                     <p className="text-muted mb-0">
-                        Daily cash and payment settlement
+                        {t("Daily cash and payment settlement")}
                     </p>
 
                 </div>
 
 
-                <div>
+                <div className="d-flex gap-2">
 
-                    <label className="form-label mb-1">
-                        Settlement Date
-                    </label>
+                    <div>
 
-                    <input
-                        type="date"
-                        className="form-control"
-                        value={date}
-                        onChange={(e) =>
-                            setDate(e.target.value)
-                        }
-                    />
+                        <label className="form-label mb-1">
+                            {t("Settlement Date")}
+                        </label>
+
+                        <input
+                            type="date"
+                            className="form-control"
+                            value={date}
+                            onChange={(e) =>
+                                setDate(e.target.value)
+                            }
+                        />
+
+                    </div>
+
+
+                    {/* CALCULATOR BUTTON */}
+
+                    <div className="text-end d-flex flex-column justify-content-end">
+
+                        <button
+                            type="button"
+                            className="btn btn-outline-primary"
+                            onClick={() =>
+                                setShowCalculator(true)
+                            }
+                            title={t("Open calculator for quick temporary calculations")}
+                        >
+                            <i className="bi bi-calculator-fill me-1" />
+                            {t("Calculator")}
+                        </button>
+
+                    </div>
 
                 </div>
 
@@ -1219,7 +1250,7 @@ function DailySettlement() {
             {loading && (
 
                 <div className="alert alert-info">
-                    Loading settlement...
+                    {t("Loading settlement...")}
                 </div>
 
             )}
@@ -1234,7 +1265,7 @@ function DailySettlement() {
                 <div className="card-body">
 
                     <h5 className="mb-4">
-                        Today's Sales
+                        {t("Today's Sales")}
                     </h5>
 
 
@@ -1245,7 +1276,7 @@ function DailySettlement() {
                         <div className="col-md-3">
 
                             <label className="form-label">
-                                Total Sales
+                                {t("Total Sales")}
                             </label>
 
                             <div className="form-control bg-light">
@@ -1260,7 +1291,7 @@ function DailySettlement() {
                         <div className="col-md-3">
 
                             <label className="form-label fw-semibold">
-                                Cash Received
+                                {t("Cash Received")}
                             </label>
 
                             <input
@@ -1268,7 +1299,7 @@ function DailySettlement() {
                                 min="0"
                                 step="0.01"
                                 className="form-control"
-                                placeholder="Enter cash"
+                                placeholder={t("Enter cash")}
                                 value={cashSales}
                                 onChange={(e) =>
                                     setCashSales(
@@ -1285,7 +1316,7 @@ function DailySettlement() {
                         <div className="col-md-3">
 
                             <label className="form-label fw-semibold">
-                                Online Received
+                                {t("Online Received")}
                             </label>
 
                             <input
@@ -1293,7 +1324,7 @@ function DailySettlement() {
                                 min="0"
                                 step="0.01"
                                 className="form-control"
-                                placeholder="PhonePe + Paytm"
+                                placeholder={t("PhonePe + Paytm")}
                                 value={onlineSales}
                                 onChange={(e) =>
                                     setOnlineSales(
@@ -1310,7 +1341,7 @@ function DailySettlement() {
                         <div className="col-md-3">
 
                             <label className="form-label">
-                                Aaj ki Udhari
+                                {t("Aaj ki Udhari")}
                             </label>
 
                             <div className="form-control bg-light">
@@ -1335,9 +1366,7 @@ function DailySettlement() {
 
                         <small className="text-muted">
 
-                            Today's Sales =
-                            Cash + Online + Aaj ki Udhari.
-                            Aaj ki Udhari is maintained in the table below.
+                            {t("Today's Sales = Cash + Online + Aaj ki Udhari. Aaj ki Udhari is maintained in the table below.")}
 
                         </small>
 
@@ -1359,7 +1388,7 @@ function DailySettlement() {
                     <div className="d-flex justify-content-between align-items-center mb-4">
 
                         <h5 className="mb-0">
-                            Aaj ki Udhari
+                            {t("Aaj ki Udhari")}
                         </h5>
 
 
@@ -1368,7 +1397,7 @@ function DailySettlement() {
                             className="btn btn-outline-primary btn-sm"
                             onClick={addUdhariSale}
                         >
-                            + Add Udhari
+                            {t("+ Add Udhari")}
                         </button>
 
                     </div>
@@ -1383,31 +1412,31 @@ function DailySettlement() {
                                 <tr>
 
                                     <th>
-                                        Name
+                                        {t("Name")}
                                     </th>
 
                                     <th>
-                                        Bill
+                                        {t("Bill")}
                                     </th>
 
                                     <th style={{ width: "150px" }}>
-                                        Petrol Amount
+                                        {t("Petrol Amount")}
                                     </th>
 
                                     <th style={{ width: "150px" }}>
-                                        Diesel Amount
+                                        {t("Diesel Amount")}
                                     </th>
 
                                     <th style={{ width: "140px" }}>
-                                        Total Amount
+                                        {t("Total Amount")}
                                     </th>
 
                                     <th style={{ width: "90px" }}>
-                                        Ledger
+                                        {t("Ledger")}
                                     </th>
 
                                     <th style={{ width: "80px" }}>
-                                        Action
+                                        {t("Action")}
                                     </th>
 
                                 </tr>
@@ -1427,7 +1456,7 @@ function DailySettlement() {
                                                 <input
                                                     type="text"
                                                     className="form-control"
-                                                    placeholder="Customer name"
+                                                    placeholder={t("Customer name")}
                                                     value={
                                                         item.customerName
                                                     }
@@ -1448,7 +1477,7 @@ function DailySettlement() {
                                                 <input
                                                     type="text"
                                                     className="form-control"
-                                                    placeholder="Bill no."
+                                                    placeholder={t("Bill no.")}
                                                     value={
                                                         item.billNo
                                                     }
@@ -1471,7 +1500,7 @@ function DailySettlement() {
                                                     min="0"
                                                     step="0.01"
                                                     className="form-control"
-                                                    placeholder="Petrol"
+                                                    placeholder={t("Petrol")}
                                                     value={
                                                         item.petrolAmount
                                                     }
@@ -1494,7 +1523,7 @@ function DailySettlement() {
                                                     min="0"
                                                     step="0.01"
                                                     className="form-control"
-                                                    placeholder="Diesel"
+                                                    placeholder={t("Diesel")}
                                                     value={
                                                         item.dieselAmount
                                                     }
@@ -1584,7 +1613,7 @@ function DailySettlement() {
                                         colSpan="4"
                                         className="text-end"
                                     >
-                                        Total Udhari
+                                        {t("Total Udhari")}
                                     </th>
 
                                     <th>
@@ -1619,7 +1648,7 @@ function DailySettlement() {
                     <div className="d-flex justify-content-between align-items-center mb-4">
 
                         <h5 className="mb-0">
-                            Udhari Credit
+                            {t("Udhari Credit")}
                         </h5>
 
 
@@ -1628,7 +1657,7 @@ function DailySettlement() {
                             className="btn btn-outline-primary btn-sm"
                             onClick={addUdhariCredit}
                         >
-                            + Add Credit
+                            {t("+ Add Credit")}
                         </button>
 
                     </div>
@@ -1643,23 +1672,23 @@ function DailySettlement() {
                                 <tr>
 
                                     <th>
-                                        Name
+                                        {t("Name")}
                                     </th>
 
                                     <th style={{ width: "180px" }}>
-                                        Total Amount
+                                        {t("Total Amount")}
                                     </th>
 
                                     <th style={{ width: "180px" }}>
-                                        Payment Method
+                                        {t("Payment Method")}
                                     </th>
 
                                     <th style={{ width: "90px" }}>
-                                        Ledger
+                                        {t("Ledger")}
                                     </th>
 
                                     <th style={{ width: "80px" }}>
-                                        Action
+                                        {t("Action")}
                                     </th>
 
                                 </tr>
@@ -1679,7 +1708,7 @@ function DailySettlement() {
                                                 <input
                                                     type="text"
                                                     className="form-control"
-                                                    placeholder="Customer name"
+                                                    placeholder={t("Customer name")}
                                                     value={
                                                         item.customerName
                                                     }
@@ -1702,7 +1731,7 @@ function DailySettlement() {
                                                     min="0"
                                                     step="0.01"
                                                     className="form-control"
-                                                    placeholder="Amount"
+                                                    placeholder={t("Amount")}
                                                     value={
                                                         item.totalAmount
                                                     }
@@ -1735,15 +1764,15 @@ function DailySettlement() {
                                                 >
 
                                                     <option value="CASH">
-                                                        Cash
+                                                        {t("Cash")}
                                                     </option>
 
                                                     <option value="PHONEPE">
-                                                        PhonePe
+                                                        {t("PhonePe")}
                                                     </option>
 
                                                     <option value="PAYTM">
-                                                        Paytm
+                                                        {t("Paytm")}
                                                     </option>
 
                                                 </select>
@@ -1802,7 +1831,7 @@ function DailySettlement() {
                                 <tr>
 
                                     <th className="text-end">
-                                        Cash Credit
+                                        {t("Cash Credit")}
                                     </th>
 
                                     <th>
@@ -1813,7 +1842,7 @@ function DailySettlement() {
                                         colSpan="2"
                                         className="text-end"
                                     >
-                                        Online Credit
+                                        {t("Online Credit")}
                                     </th>
 
                                     <th>
@@ -1826,7 +1855,7 @@ function DailySettlement() {
                                 <tr>
 
                                     <th className="text-end">
-                                        Total Credit
+                                        {t("Total Credit")}
                                     </th>
 
                                     <th>
@@ -1844,8 +1873,7 @@ function DailySettlement() {
                     </div>
 
                     <small className="text-muted">
-                        Only Cash Credit affects Remaining Amount.
-                        PhonePe and Paytm do not affect manager's cash.
+                        {t("Only Cash Credit affects Remaining Amount. PhonePe and Paytm do not affect manager's cash.")}
                     </small>
 
                 </div>
@@ -1864,7 +1892,7 @@ function DailySettlement() {
                     <div className="d-flex justify-content-between align-items-center mb-4">
 
                         <h5 className="mb-0">
-                            Expenditure
+                            {t("Expenditure")}
                         </h5>
 
 
@@ -1873,7 +1901,7 @@ function DailySettlement() {
                             className="btn btn-outline-primary btn-sm"
                             onClick={addExpenditure}
                         >
-                            + Add Expenditure
+                            {t("+ Add Expenditure")}
                         </button>
 
                     </div>
@@ -1888,15 +1916,15 @@ function DailySettlement() {
                                 <tr>
 
                                     <th>
-                                        Description
+                                        {t("Description")}
                                     </th>
 
                                     <th style={{ width: "220px" }}>
-                                        Amount
+                                        {t("Amount")}
                                     </th>
 
                                     <th style={{ width: "80px" }}>
-                                        Action
+                                        {t("Action")}
                                     </th>
 
                                 </tr>
@@ -1916,7 +1944,7 @@ function DailySettlement() {
                                                 <input
                                                     type="text"
                                                     className="form-control"
-                                                    placeholder="Where was the money spent?"
+                                                    placeholder={t("Where was the money spent?")}
                                                     value={
                                                         item.description
                                                     }
@@ -1939,7 +1967,7 @@ function DailySettlement() {
                                                     min="0"
                                                     step="0.01"
                                                     className="form-control"
-                                                    placeholder="Amount"
+                                                    placeholder={t("Amount")}
                                                     value={
                                                         item.amount
                                                     }
@@ -1984,7 +2012,7 @@ function DailySettlement() {
                                 <tr>
 
                                     <th className="text-end">
-                                        Total Expenditure
+                                        {t("Total Expenditure")}
                                     </th>
 
                                     <th>
@@ -2017,7 +2045,7 @@ function DailySettlement() {
                 <div className="card-body">
 
                     <h5 className="mb-4">
-                        Bank Deposit
+                        {t("Bank Deposit")}
                     </h5>
 
 
@@ -2026,7 +2054,7 @@ function DailySettlement() {
                         <div className="col-md-6">
 
                             <label className="form-label fw-semibold">
-                                Bank Cash Deposit
+                                {t("Bank Cash Deposit")}
                             </label>
 
                             <input
@@ -2034,7 +2062,7 @@ function DailySettlement() {
                                 min="0"
                                 step="0.01"
                                 className="form-control"
-                                placeholder="Enter deposited cash"
+                                placeholder={t("Enter deposited cash")}
                                 value={bankCashDeposit}
                                 onChange={(e) =>
                                     setBankCashDeposit(
@@ -2044,8 +2072,7 @@ function DailySettlement() {
                             />
 
                             <small className="text-muted">
-                                This amount will be deducted
-                                from manager's remaining cash.
+                                {t("This amount will be deducted from manager's remaining cash.")}
                             </small>
 
                         </div>
@@ -2066,14 +2093,14 @@ function DailySettlement() {
                 <div className="card-body">
 
                     <h5 className="mb-4">
-                        Settlement Calculation
+                        {t("Settlement Calculation")}
                     </h5>
 
 
                     <div className="d-flex justify-content-between mb-3">
 
                         <span>
-                            Opening Amount
+                            {t("Opening Amount")}
                         </span>
 
                         <strong>
@@ -2086,7 +2113,7 @@ function DailySettlement() {
                     <div className="d-flex justify-content-between mb-3">
 
                         <span>
-                            Today's Cash Sales
+                            {t("Today's Cash Sales")}
                         </span>
 
                         <strong>
@@ -2099,7 +2126,7 @@ function DailySettlement() {
                     <div className="d-flex justify-content-between mb-3">
 
                         <span>
-                            Udhari Credit - Cash
+                            {t("Udhari Credit - Cash")}
                         </span>
 
                         <strong>
@@ -2115,7 +2142,7 @@ function DailySettlement() {
                     <div className="d-flex justify-content-between mb-3">
 
                         <span>
-                            Cash Available
+                            {t("Cash Available")}
                         </span>
 
                         <strong>
@@ -2128,7 +2155,7 @@ function DailySettlement() {
                     <div className="d-flex justify-content-between mb-3">
 
                         <span>
-                            Aaj ki Udhari
+                            {t("Aaj ki Udhari")}
                         </span>
 
                         <strong>
@@ -2141,7 +2168,7 @@ function DailySettlement() {
                     <div className="d-flex justify-content-between mb-3">
 
                         <span>
-                            Bank Cash Deposit
+                            {t("Bank Cash Deposit")}
                         </span>
 
                         <strong>
@@ -2154,7 +2181,7 @@ function DailySettlement() {
                     <div className="d-flex justify-content-between mb-3">
 
                         <span>
-                            Expenditure
+                            {t("Expenditure")}
                         </span>
 
                         <strong>
@@ -2170,7 +2197,7 @@ function DailySettlement() {
                     <div className="d-flex justify-content-between align-items-center">
 
                         <span className="fs-5">
-                            Remaining Amount
+                            {t("Remaining Amount")}
                         </span>
 
                         <strong className="fs-3">
@@ -2198,8 +2225,8 @@ function DailySettlement() {
                 >
 
                     {saving
-                        ? "Saving..."
-                        : "Save Settlement"
+                        ? t("Saving...")
+                        : t("Save Settlement")
                     }
 
                 </button>
@@ -2225,12 +2252,12 @@ function DailySettlement() {
 
                             <div className="modal-header">
                                 <h5 className="modal-title">
-                                    Save Settlement
+                                    {t("Save Settlement")}
                                 </h5>
                                 <button
                                     type="button"
                                     className="btn-close"
-                                    aria-label="Close"
+                                    aria-label={t("Close")}
                                     onClick={() => setShowSaveConfirm(false)}
                                     disabled={saving}
                                 />
@@ -2238,19 +2265,17 @@ function DailySettlement() {
 
                             <div className="modal-body">
                                 <p className="mb-2">
-                                    Settlement for{" "}
-                                    <strong>
-                                        {new Date(date + "T00:00:00")
+                                    {t("Settlement for {date} save karna chahte hain?", {
+                                        date: new Date(date + "T00:00:00")
                                             .toLocaleDateString("en-IN", {
                                                 day:   "2-digit",
                                                 month: "long",
                                                 year:  "numeric"
-                                            })}
-                                    </strong>{" "}
-                                    save karna chahte hain?
+                                            })
+                                    })}
                                 </p>
                                 <p className="text-muted mb-0 small">
-                                    Existing settlement data overwrite ho jaayega.
+                                    {t("Existing settlement data overwrite ho jaayega.")}
                                 </p>
                             </div>
 
@@ -2261,7 +2286,7 @@ function DailySettlement() {
                                     onClick={() => setShowSaveConfirm(false)}
                                     disabled={saving}
                                 >
-                                    Cancel
+                                    {t("Cancel")}
                                 </button>
                                 <button
                                     type="button"
@@ -2272,7 +2297,7 @@ function DailySettlement() {
                                         await saveSettlement();
                                     }}
                                 >
-                                    {saving ? "Saving..." : "Haan, Save Karo"}
+                                    {saving ? t("Saving...") : t("Haan, Save Karo")}
                                 </button>
                             </div>
 
@@ -2283,6 +2308,16 @@ function DailySettlement() {
                 <div className="modal-backdrop fade show" />
             </>
         )}
+
+
+        {/* ==========================================
+            CALCULATOR MODAL (temporary, no data saved)
+        ========================================== */}
+
+        <CalculatorModal
+            show={showCalculator}
+            onClose={() => setShowCalculator(false)}
+        />
 
         </>
     );

@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useT } from "../i18n/LanguageContext";
 
 
 const API_URL = "http://localhost:5000/api";
@@ -65,6 +66,9 @@ function SummaryCard({ label, value, color = "dark", small = false }) {
 // ======================================================
 
 function RowDetail({ row }) {
+
+    const t = useT();
+
     return (
         <div className="px-3 py-3 bg-light border-top">
             <div className="row g-3">
@@ -74,47 +78,47 @@ function RowDetail({ row }) {
                     <div className="row g-2">
 
                         <div className="col-6 col-md-4">
-                            <div className="small text-muted">Total Sales</div>
+                            <div className="small text-muted">{t("Total Sales")}</div>
                             <div className="fw-bold">₹{fmt(row.total_sales)}</div>
                         </div>
 
                         <div className="col-6 col-md-4">
-                            <div className="small text-muted">Cash Sales</div>
+                            <div className="small text-muted">{t("Cash Sales")}</div>
                             <div className="fw-semibold text-success">₹{fmt(row.cash_sales)}</div>
                         </div>
 
                         <div className="col-6 col-md-4">
-                            <div className="small text-muted">Online Sales</div>
+                            <div className="small text-muted">{t("Online Sales")}</div>
                             <div className="fw-semibold text-primary">₹{fmt(row.online_sales)}</div>
                         </div>
 
                         <div className="col-6 col-md-4">
-                            <div className="small text-muted">Aaj ki Udhari</div>
+                            <div className="small text-muted">{t("Aaj ki Udhari")}</div>
                             <div className="fw-semibold text-warning">₹{fmt(row.today_udhari)}</div>
                         </div>
 
                         <div className="col-6 col-md-4">
-                            <div className="small text-muted">Cash Credit Rcvd</div>
+                            <div className="small text-muted">{t("Cash Credit Rcvd")}</div>
                             <div className="fw-semibold text-success">₹{fmt(row.cash_credit)}</div>
                         </div>
 
                         <div className="col-6 col-md-4">
-                            <div className="small text-muted">Online Credit Rcvd</div>
+                            <div className="small text-muted">{t("Online Credit Rcvd")}</div>
                             <div className="fw-semibold text-primary">₹{fmt(row.online_credit)}</div>
                         </div>
 
                         <div className="col-6 col-md-4">
-                            <div className="small text-muted">Prev. Remaining</div>
+                            <div className="small text-muted">{t("Prev. Remaining")}</div>
                             <div className="fw-semibold">₹{fmt(row.opening_amount)}</div>
                         </div>
 
                         <div className="col-6 col-md-4">
-                            <div className="small text-muted">Bank Deposit</div>
+                            <div className="small text-muted">{t("Bank Deposit")}</div>
                             <div className="fw-semibold text-danger">₹{fmt(row.bank_cash_deposit)}</div>
                         </div>
 
                         <div className="col-6 col-md-4">
-                            <div className="small text-muted">Expenditure</div>
+                            <div className="small text-muted">{t("Expenditure")}</div>
                             <div className="fw-semibold text-danger">₹{fmt(row.expenditure)}</div>
                         </div>
 
@@ -126,7 +130,7 @@ function RowDetail({ row }) {
                     {row.expenditure_items && row.expenditure_items.length > 0 ? (
                         <div>
                             <div className="small text-muted fw-semibold mb-2">
-                                Expenditure Breakdown
+                                {t("Expenditure Breakdown")}
                             </div>
                             <table className="table table-sm table-borderless mb-0">
                                 <tbody>
@@ -142,7 +146,7 @@ function RowDetail({ row }) {
                             </table>
                         </div>
                     ) : (
-                        <div className="small text-muted fst-italic">No expenditures recorded</div>
+                        <div className="small text-muted fst-italic">{t("No expenditures recorded")}</div>
                     )}
                 </div>
 
@@ -167,6 +171,8 @@ function DailySettlementRecords() {
     const [searched, setSearched]   = useState(false);
     const [expandedId, setExpandedId] = useState(null);
 
+    const t = useT();
+
 
     // --------------------------------------------------
     // FETCH
@@ -189,14 +195,14 @@ function DailySettlementRecords() {
             const result = await res.json();
 
             if (!res.ok) {
-                throw new Error(result.message || "Failed to fetch records");
+                throw new Error(result.message || t("Failed to fetch records"));
             }
 
             setRecords(result.data.records);
             setTotals(result.data.totals);
 
         } catch (err) {
-            setError(err.message || "Failed to fetch settlement records");
+            setError(err.message || t("Failed to fetch settlement records"));
         } finally {
             setLoading(false);
         }
@@ -237,9 +243,9 @@ function DailySettlementRecords() {
 
             {/* HEADER */}
             <div className="mb-4">
-                <h4 className="fw-bold mb-0">Daily Settlement Records</h4>
+                <h4 className="fw-bold mb-0">{t("Daily Settlement Records")}</h4>
                 <p className="text-muted small mb-0">
-                    Browse saved settlements — click any row to expand full details
+                    {t("Browse saved settlements — click any row to expand full details")}
                 </p>
             </div>
 
@@ -253,7 +259,7 @@ function DailySettlementRecords() {
                     <div className="row g-3 align-items-end">
 
                         <div className="col-12 col-md-3">
-                            <label className="form-label fw-semibold small mb-1">From</label>
+                            <label className="form-label fw-semibold small mb-1">{t("From")}</label>
                             <input
                                 type="date"
                                 className="form-control"
@@ -263,7 +269,7 @@ function DailySettlementRecords() {
                         </div>
 
                         <div className="col-12 col-md-3">
-                            <label className="form-label fw-semibold small mb-1">To</label>
+                            <label className="form-label fw-semibold small mb-1">{t("To")}</label>
                             <input
                                 type="date"
                                 className="form-control"
@@ -279,8 +285,8 @@ function DailySettlementRecords() {
                                 disabled={loading}
                             >
                                 {loading
-                                    ? <><span className="spinner-border spinner-border-sm me-2" />Loading...</>
-                                    : <><i className="bi bi-search me-2" />Load Records</>
+                                    ? <><span className="spinner-border spinner-border-sm me-2" />{t("Loading...")}</>
+                                    : <><i className="bi bi-search me-2" />{t("Load Records")}</>
                                 }
                             </button>
                             <button
@@ -288,7 +294,7 @@ function DailySettlementRecords() {
                                 onClick={handleClear}
                                 disabled={loading}
                             >
-                                Clear
+                                {t("Clear")}
                             </button>
                         </div>
 
@@ -312,7 +318,7 @@ function DailySettlementRecords() {
 
                     <div className="col-6 col-md-2">
                         <SummaryCard
-                            label="Settlements"
+                            label={t("Settlements")}
                             value={totals.count}
                             color="dark"
                         />
@@ -320,7 +326,7 @@ function DailySettlementRecords() {
 
                     <div className="col-6 col-md-2">
                         <SummaryCard
-                            label="Total Sales"
+                            label={t("Total Sales")}
                             value={`₹${fmt(totals.sumTotalSales)}`}
                             color="dark"
                             small
@@ -329,7 +335,7 @@ function DailySettlementRecords() {
 
                     <div className="col-6 col-md-2">
                         <SummaryCard
-                            label="Cash Sales"
+                            label={t("Cash Sales")}
                             value={`₹${fmt(totals.sumCashSales)}`}
                             color="success"
                             small
@@ -338,7 +344,7 @@ function DailySettlementRecords() {
 
                     <div className="col-6 col-md-2">
                         <SummaryCard
-                            label="Online Sales"
+                            label={t("Online Sales")}
                             value={`₹${fmt(totals.sumOnlineSales)}`}
                             color="primary"
                             small
@@ -347,7 +353,7 @@ function DailySettlementRecords() {
 
                     <div className="col-6 col-md-2">
                         <SummaryCard
-                            label="Bank Deposits"
+                            label={t("Bank Deposits")}
                             value={`₹${fmt(totals.sumBankDeposit)}`}
                             color="danger"
                             small
@@ -356,7 +362,7 @@ function DailySettlementRecords() {
 
                     <div className="col-6 col-md-2">
                         <SummaryCard
-                            label="Expenditures"
+                            label={t("Expenditures")}
                             value={`₹${fmt(totals.sumExpenditure)}`}
                             color="danger"
                             small
@@ -375,7 +381,7 @@ function DailySettlementRecords() {
                 records.length === 0 ? (
                     <div className="text-center py-5 text-muted">
                         <i className="bi bi-inbox fs-1 d-block mb-2" />
-                        No settlement records found for this date range
+                        {t("No settlement records found for this date range")}
                     </div>
                 ) : (
                     <div className="card border-0 shadow-sm">
@@ -385,15 +391,15 @@ function DailySettlementRecords() {
                                 <thead className="table-dark">
                                     <tr>
                                         <th className="ps-3" style={{ width: 40 }}></th>
-                                        <th>Date</th>
-                                        <th className="text-end">Total Sales</th>
-                                        <th className="text-end">Cash</th>
-                                        <th className="text-end">Online</th>
-                                        <th className="text-end">Udhari</th>
-                                        <th className="text-end">Credit Rcvd</th>
-                                        <th className="text-end">Bank Deposit</th>
-                                        <th className="text-end">Expenditure</th>
-                                        <th className="text-end pe-3">Remaining</th>
+                                        <th>{t("Date")}</th>
+                                        <th className="text-end">{t("Total Sales")}</th>
+                                        <th className="text-end">{t("Cash")}</th>
+                                        <th className="text-end">{t("Online")}</th>
+                                        <th className="text-end">{t("Udhari")}</th>
+                                        <th className="text-end">{t("Credit Rcvd")}</th>
+                                        <th className="text-end">{t("Bank Deposit")}</th>
+                                        <th className="text-end">{t("Expenditure")}</th>
+                                        <th className="text-end pe-3">{t("Remaining")}</th>
                                     </tr>
                                 </thead>
 
@@ -481,7 +487,7 @@ function DailySettlementRecords() {
                                     <tfoot className="table-secondary fw-bold">
                                         <tr>
                                             <td colSpan={2} className="ps-3">
-                                                Total ({totals.count} days)
+                                                {t("Total ({count} days)", { count: totals.count })}
                                             </td>
                                             <td className="text-end">₹{fmt(totals.sumTotalSales)}</td>
                                             <td className="text-end text-success">₹{fmt(totals.sumCashSales)}</td>
@@ -505,7 +511,7 @@ function DailySettlementRecords() {
             {!searched && !loading && (
                 <div className="text-center py-5 text-muted">
                     <i className="bi bi-calendar-range fs-1 d-block mb-2 opacity-25" />
-                    Select a date range and click Load Records
+                    {t("Select a date range and click Load Records")}
                 </div>
             )}
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useT } from "../i18n/LanguageContext";
 import FuelCard from "../components/FuelCard";
 
 import {
@@ -132,6 +133,8 @@ const initialSales = [
 
 function DailySales() {
 
+    const t = useT();
+
     // --------------------------------------------------
     // DATE
     // --------------------------------------------------
@@ -238,7 +241,7 @@ function DailySales() {
 
             alert(
                 error.message ||
-                "Failed to change date."
+                t("Failed to change date.")
             );
 
         } finally {
@@ -292,7 +295,7 @@ function DailySales() {
 
             alert(
                 error.message ||
-                "Failed to delete existing sales data."
+                t("Failed to delete existing sales data.")
             );
 
         } finally {
@@ -615,6 +618,49 @@ function DailySales() {
 
 
     // ==================================================
+    // PETROL / DIESEL BREAKDOWN
+    // ==================================================
+
+    const fuelBreakdown =
+        sales.reduce(
+            (acc, sale) => {
+
+                const calculated =
+                    calculateSale(sale);
+
+
+                if (sale.fuelType === "PETROL") {
+
+                    acc.petrolLitres +=
+                        calculated.totalLitres;
+
+                    acc.petrolAmount +=
+                        calculated.totalAmount;
+
+                } else {
+
+                    acc.dieselLitres +=
+                        calculated.totalLitres;
+
+                    acc.dieselAmount +=
+                        calculated.totalAmount;
+
+                }
+
+
+                return acc;
+
+            },
+            {
+                petrolLitres: 0,
+                petrolAmount: 0,
+                dieselLitres: 0,
+                dieselAmount: 0
+            }
+        );
+
+
+    // ==================================================
     // SAVE SELECTED DATE
     // ==================================================
 
@@ -625,7 +671,7 @@ function DailySales() {
             if (!selectedDate) {
 
                 alert(
-                    "Please select a date."
+                    t("Please select a date.")
                 );
 
                 return;
@@ -652,7 +698,7 @@ function DailySales() {
             if (hasInvalidSale) {
 
                 alert(
-                    "Please correct the invalid readings before saving."
+                    t("Please correct the invalid readings before saving.")
                 );
 
                 return;
@@ -713,7 +759,7 @@ function DailySales() {
 
 
             alert(
-                `${formatDisplayDate(selectedDate)} sales saved successfully.`
+                t("{date} sales saved successfully.", { date: formatDisplayDate(selectedDate) })
             );
 
         } catch (error) {
@@ -722,7 +768,7 @@ function DailySales() {
 
             alert(
                 error.message ||
-                "Failed to save sales."
+                t("Failed to save sales.")
             );
 
         }
@@ -747,11 +793,11 @@ function DailySales() {
                 <div>
 
                     <h2 className="mb-1">
-                        Daily Sales
+                        {t("Daily Sales")}
                     </h2>
 
                     <p className="text-muted mb-0">
-                        Daily Sales Dashboard
+                        {t("Daily Sales Dashboard")}
                     </p>
 
                 </div>
@@ -762,7 +808,7 @@ function DailySales() {
                 <div className="text-end">
 
                     <label className="form-label fw-semibold mb-1">
-                        Sales Date
+                        {t("Sales Date")}
                     </label>
 
                     <input
@@ -788,11 +834,9 @@ function DailySales() {
             {loading && (
 
                 <div className="alert alert-info py-2">
-                    Loading sales for{" "}
-                    {formatDisplayDate(
-                        selectedDate
-                    )}
-                    ...
+                    {t("Loading sales for {date}...", {
+                        date: formatDisplayDate(selectedDate)
+                    })}
                 </div>
 
             )}
@@ -813,7 +857,7 @@ function DailySales() {
                         <div className="card-body">
 
                             <label className="form-label fw-semibold">
-                                Petrol Price / L
+                                {t("Petrol Price / L")}
                             </label>
 
                             <input
@@ -821,7 +865,7 @@ function DailySales() {
                                 step="0.01"
                                 min="0"
                                 className="form-control"
-                                placeholder="Enter petrol price"
+                                placeholder={t("Enter petrol price")}
                                 value={petrolPrice}
                                 onChange={(e) =>
                                     setPetrolPrice(
@@ -846,7 +890,7 @@ function DailySales() {
                         <div className="card-body">
 
                             <label className="form-label fw-semibold">
-                                Diesel Price / L
+                                {t("Diesel Price / L")}
                             </label>
 
                             <input
@@ -854,7 +898,7 @@ function DailySales() {
                                 step="0.01"
                                 min="0"
                                 className="form-control"
-                                placeholder="Enter diesel price"
+                                placeholder={t("Enter diesel price")}
                                 value={dieselPrice}
                                 onChange={(e) =>
                                     setDieselPrice(
@@ -881,7 +925,7 @@ function DailySales() {
                 <div className="d-flex align-items-center mb-3">
 
                     <h4 className="mb-0">
-                        Machine 1
+                        {t("Machine 1")}
                     </h4>
 
                 </div>
@@ -1006,7 +1050,7 @@ function DailySales() {
                 <div className="d-flex align-items-center mb-3">
 
                     <h4 className="mb-0">
-                        Machine 2
+                        {t("Machine 2")}
                     </h4>
 
                 </div>
@@ -1126,7 +1170,7 @@ function DailySales() {
                 GRAND TOTAL
             ========================================= */}
 
-            <div className="card mt-4 shadow-sm">
+            <div className="card mt-4 shadow-sm stat-card">
 
                 <div className="card-body">
 
@@ -1135,7 +1179,7 @@ function DailySales() {
                         <div className="col-12 col-md-6 border-md-end">
 
                             <div className="text-muted">
-                                Total Sale Litres
+                                {t("Total Sale Litres")}
                             </div>
 
                             <div className="fs-3 fw-bold">
@@ -1148,7 +1192,7 @@ function DailySales() {
                         <div className="col-12 col-md-6">
 
                             <div className="text-muted">
-                                Total Sales Amount
+                                {t("Total Sales Amount")}
                             </div>
 
                             <div className="fs-3 fw-bold">
@@ -1156,6 +1200,48 @@ function DailySales() {
                                 {grandTotal.amount.toFixed(2)}
                             </div>
 
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                {/* PETROL / DIESEL BREAKDOWN */}
+
+                <hr />
+
+                <div className="row text-center">
+
+                    <div className="col-6">
+
+                        <div className="text-muted">
+                            <span className="badge bg-success">{t("Petrol")}</span>
+                        </div>
+
+                        <div className="fs-5 fw-bold">
+                            {fuelBreakdown.petrolLitres.toFixed(2)} L
+                        </div>
+
+                        <div className="text-success fw-semibold">
+                            ₹{fuelBreakdown.petrolAmount.toFixed(2)}
+                        </div>
+
+                    </div>
+
+
+                    <div className="col-6">
+
+                        <div className="text-muted">
+                            <span className="badge bg-dark">{t("Diesel")}</span>
+                        </div>
+
+                        <div className="fs-5 fw-bold">
+                            {fuelBreakdown.dieselLitres.toFixed(2)} L
+                        </div>
+
+                        <div className="text-dark fw-semibold">
+                            ₹{fuelBreakdown.dieselAmount.toFixed(2)}
                         </div>
 
                     </div>
@@ -1177,7 +1263,8 @@ function DailySales() {
                     onClick={handleSave}
                     disabled={loading}
                 >
-                    Save Sales
+                    <i className="bi bi-check2-circle me-2" />
+                    {t("Save Sales")}
                 </button>
 
             </div>
@@ -1199,13 +1286,13 @@ function DailySales() {
 
                                 <div className="modal-header">
                                     <h5 className="modal-title">
-                                        Data Already Exists
+                                        {t("Data Already Exists")}
                                     </h5>
 
                                     <button
                                         type="button"
                                         className="btn-close"
-                                        aria-label="Close"
+                                        aria-label={t("Close")}
                                         onClick={() => {
                                             setShowExistingDateModal(false);
                                             setPendingDate("");
@@ -1215,13 +1302,15 @@ function DailySales() {
 
                                 <div className="modal-body">
                                     <p className="mb-2">
-                                        Sales data for <strong>
+                                        {t("Sales data for")}{" "}
+                                        <strong>
                                             {formatDisplayDate(pendingDate)}
-                                        </strong> already exists.
+                                        </strong>{" "}
+                                        {t("already exists.")}
                                     </p>
 
                                     <p className="text-muted mb-0">
-                                        Delete the existing data and enter fresh sales for this date?
+                                        {t("Delete the existing data and enter fresh sales for this date?")}
                                     </p>
                                 </div>
 
@@ -1234,7 +1323,7 @@ function DailySales() {
                                             setPendingDate("");
                                         }}
                                     >
-                                        Cancel
+                                        {t("Cancel")}
                                     </button>
 
                                     <button
@@ -1243,7 +1332,7 @@ function DailySales() {
                                         onClick={deleteExistingDateData}
                                         disabled={loading}
                                     >
-                                        {loading ? "Deleting..." : "Delete Existing Data"}
+                                        {loading ? t("Deleting...") : t("Delete Existing Data")}
                                     </button>
                                 </div>
 

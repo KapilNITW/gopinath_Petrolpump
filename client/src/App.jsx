@@ -5,7 +5,16 @@ import {
     Navigate
 } from "react-router-dom";
 
+import { useContext } from "react";
+import { AuthContext } from "./context/AuthContext";
+import { useT } from "./i18n/LanguageContext";
+
 import Navbar from "./components/Navbar";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import ChangePassword from "./pages/ChangePassword";
+import VerifyMobile from "./pages/VerifyMobile";
+import AdminLogin from "./pages/AdminLogin";
 
 import DailySales from "./pages/DailySales";
 import SalesRecords from "./pages/SalesRecords";
@@ -14,20 +23,82 @@ import Udhari from "./pages/Udhari";
 import DailySettlementRecords from "./pages/DailySettlementRecords";
 import DatabaseRecords from "./pages/DatabaseRecords";
 import Ledger from "./pages/Ledger";
+import AdminRequests from "./pages/AdminRequests";
 
 
 function UdhariRecords() {
+
+    const t = useT();
+
     return (
         <div className="container-fluid py-4">
 
-            <h2>Udhari Records</h2>
+            <h2>{t("Udhari Records")}</h2>
 
             <p className="text-muted">
-                Udhari records will be added later.
+                {t("Udhari records will be added later.")}
             </p>
 
         </div>
     );
+}
+
+
+// ======================================================
+// ADMIN PROTECTED ROUTE
+// ======================================================
+
+function AdminRoute({ children }) {
+
+    const { user, loading } = useContext(AuthContext);
+    const t = useT();
+
+    if (loading) {
+        return (
+            <div className="container-fluid py-5 text-center">
+                <div className="spinner-border"
+                     role="status" />
+                <p className="mt-3 text-muted">
+                    {t("Loading...")}
+                </p>
+            </div>
+        );
+    }
+
+    if (!user || user.username !== "kapil6013") {
+        return <Navigate to="/admin/login" replace />;
+    }
+
+    return children;
+}
+
+
+// ======================================================
+// PROTECTED ROUTE
+// ======================================================
+
+function ProtectedRoute({ children }) {
+
+    const { user, loading } = useContext(AuthContext);
+    const t = useT();
+
+    if (loading) {
+        return (
+            <div className="container-fluid py-5 text-center">
+                <div className="spinner-border"
+                     role="status" />
+                <p className="mt-3 text-muted">
+                    {t("Loading...")}
+                </p>
+            </div>
+        );
+    }
+
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
+
+    return children;
 }
 
 
@@ -46,16 +117,62 @@ function App() {
                 <Routes>
 
                 {/* ======================================
+                    AUTH
+                ====================================== */}
+
+                <Route
+                    path="/login"
+                    element={<Login />}
+                />
+
+                <Route
+                    path="/signup"
+                    element={<Signup />}
+                />
+
+                <Route
+                    path="/admin/login"
+                    element={<AdminLogin />}
+                />
+
+                <Route
+                    path="/change-password/:username"
+                    element={<ChangePassword />}
+                />
+
+                <Route
+                    path="/verify-mobile"
+                    element={<VerifyMobile />}
+                />
+
+
+                {/* ======================================
+                    ADMIN
+                ====================================== */}
+
+                <Route
+                    path="/admin/requests"
+                    element={
+                        <AdminRoute>
+                            <AdminRequests />
+                        </AdminRoute>
+                    }
+                />
+
+
+                {/* ======================================
                     DEFAULT
                 ====================================== */}
 
                 <Route
                     path="/"
                     element={
-                        <Navigate
-                            to="/daily-sales"
-                            replace
-                        />
+                        <ProtectedRoute>
+                            <Navigate
+                                to="/daily-sales"
+                                replace
+                            />
+                        </ProtectedRoute>
                     }
                 />
 
@@ -66,7 +183,11 @@ function App() {
 
                 <Route
                     path="/daily-sales"
-                    element={<DailySales />}
+                    element={
+                        <ProtectedRoute>
+                            <DailySales />
+                        </ProtectedRoute>
+                    }
                 />
 
 
@@ -76,7 +197,11 @@ function App() {
 
                 <Route
                     path="/daily-settlement"
-                    element={<DailySettlement />}
+                    element={
+                        <ProtectedRoute>
+                            <DailySettlement />
+                        </ProtectedRoute>
+                    }
                 />
 
 
@@ -86,7 +211,11 @@ function App() {
 
                 <Route
                     path="/udhari"
-                    element={<Udhari />}
+                    element={
+                        <ProtectedRoute>
+                            <Udhari />
+                        </ProtectedRoute>
+                    }
                 />
 
 
@@ -96,47 +225,52 @@ function App() {
 
                 <Route
                     path="/ledger"
-                    element={<Ledger />}
+                    element={
+                        <ProtectedRoute>
+                            <Ledger />
+                        </ProtectedRoute>
+                    }
                 />
 
 
                 {/* ======================================
-                    DAILY SALES RECORDS
+                    VIEW ROUTES
                 ====================================== */}
 
                 <Route
                     path="/view/daily-sales"
-                    element={<SalesRecords />}
+                    element={
+                        <ProtectedRoute>
+                            <SalesRecords />
+                        </ProtectedRoute>
+                    }
                 />
-
-
-                {/* ======================================
-                    DAILY SETTLEMENT RECORDS
-                ====================================== */}
 
                 <Route
                     path="/view/daily-settlement"
-                    element={<DailySettlementRecords />}
+                    element={
+                        <ProtectedRoute>
+                            <DailySettlementRecords />
+                        </ProtectedRoute>
+                    }
                 />
-
-
-                {/* ======================================
-                    UDHARI RECORDS
-                ====================================== */}
 
                 <Route
                     path="/view/udhari"
-                    element={<UdhariRecords />}
+                    element={
+                        <ProtectedRoute>
+                            <UdhariRecords />
+                        </ProtectedRoute>
+                    }
                 />
-
-
-                {/* ======================================
-                    DATABASE RECORDS
-                ====================================== */}
 
                 <Route
                     path="/view/database"
-                    element={<DatabaseRecords />}
+                    element={
+                        <ProtectedRoute>
+                            <DatabaseRecords />
+                        </ProtectedRoute>
+                    }
                 />
 
 
@@ -147,10 +281,12 @@ function App() {
                 <Route
                     path="*"
                     element={
-                        <Navigate
-                            to="/daily-sales"
-                            replace
-                        />
+                        <ProtectedRoute>
+                            <Navigate
+                                to="/daily-sales"
+                                replace
+                            />
+                        </ProtectedRoute>
                     }
                 />
 

@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useT } from "../i18n/LanguageContext";
 
 
 const API_URL = "http://localhost:5000/api";
@@ -40,6 +41,8 @@ function UdhariSalesTab() {
     const [error, setError]           = useState("");
     const [searched, setSearched]     = useState(false);
 
+    const t = useT();
+
 
     // --------------------------------------------------
     // SEARCH
@@ -71,7 +74,7 @@ function UdhariSalesTab() {
 
             if (!res.ok) {
                 throw new Error(
-                    result.message || "Failed to search udhari"
+                    result.message || t("Failed to search udhari")
                 );
             }
 
@@ -79,7 +82,7 @@ function UdhariSalesTab() {
             setTotals(result.data.totals);
 
         } catch (err) {
-            setError(err.message || "Failed to search udhari");
+            setError(err.message || t("Failed to search udhari"));
         } finally {
             setLoading(false);
         }
@@ -129,12 +132,12 @@ function UdhariSalesTab() {
                         {/* NAME */}
                         <div className="col-12 col-md-4">
                             <label className="form-label fw-semibold small mb-1">
-                                Customer Name
+                                {t("Customer Name")}
                             </label>
                             <input
                                 type="text"
                                 className="form-control"
-                                placeholder="Search by name..."
+                                placeholder={t("Search by name...")}
                                 value={nameFilter}
                                 onChange={e => setNameFilter(e.target.value)}
                                 onKeyDown={handleKeyDown}
@@ -144,7 +147,7 @@ function UdhariSalesTab() {
                         {/* DATE */}
                         <div className="col-12 col-md-3">
                             <label className="form-label fw-semibold small mb-1">
-                                Date
+                                {t("Date")}
                             </label>
                             <input
                                 type="date"
@@ -166,14 +169,14 @@ function UdhariSalesTab() {
                                     ? <span className="spinner-border spinner-border-sm me-2" />
                                     : <i className="bi bi-search me-2" />
                                 }
-                                Search
+                                {t("Search")}
                             </button>
                             <button
                                 className="btn btn-outline-secondary px-3"
                                 onClick={handleClear}
                                 disabled={loading}
                             >
-                                Clear
+                                {t("Clear")}
                             </button>
                         </div>
 
@@ -204,7 +207,7 @@ function UdhariSalesTab() {
                     <div className="col-6 col-md-3">
                         <div className="card border-0 shadow-sm text-center h-100">
                             <div className="card-body py-3">
-                                <div className="text-muted small mb-1">Records</div>
+                                <div className="text-muted small mb-1">{t("Records")}</div>
                                 <div className="fs-4 fw-bold text-dark">
                                     {totals.count}
                                 </div>
@@ -215,7 +218,7 @@ function UdhariSalesTab() {
                     <div className="col-6 col-md-3">
                         <div className="card border-0 shadow-sm text-center h-100">
                             <div className="card-body py-3">
-                                <div className="text-muted small mb-1">Petrol Udhari</div>
+                                <div className="text-muted small mb-1">{t("Petrol Udhari")}</div>
                                 <div className="fs-5 fw-bold text-success">
                                     ₹{formatAmount(totals.totalPetrol)}
                                 </div>
@@ -226,7 +229,7 @@ function UdhariSalesTab() {
                     <div className="col-6 col-md-3">
                         <div className="card border-0 shadow-sm text-center h-100">
                             <div className="card-body py-3">
-                                <div className="text-muted small mb-1">Diesel Udhari</div>
+                                <div className="text-muted small mb-1">{t("Diesel Udhari")}</div>
                                 <div className="fs-5 fw-bold text-warning">
                                     ₹{formatAmount(totals.totalDiesel)}
                                 </div>
@@ -237,7 +240,7 @@ function UdhariSalesTab() {
                     <div className="col-6 col-md-3">
                         <div className="card border-0 shadow-sm text-center h-100">
                             <div className="card-body py-3">
-                                <div className="text-muted small mb-1">Total Udhari</div>
+                                <div className="text-muted small mb-1">{t("Total Udhari")}</div>
                                 <div className="fs-5 fw-bold text-danger">
                                     ₹{formatAmount(totals.totalAmount)}
                                 </div>
@@ -257,7 +260,7 @@ function UdhariSalesTab() {
                 records.length === 0 ? (
                     <div className="text-center py-5 text-muted">
                         <i className="bi bi-inbox fs-1 d-block mb-2" />
-                        No udhari records found
+                        {t("No udhari records found")}
                     </div>
                 ) : (
                     <div className="card border-0 shadow-sm">
@@ -266,14 +269,14 @@ function UdhariSalesTab() {
 
                                 <thead className="table-dark">
                                     <tr>
-                                        <th className="ps-3">#</th>
-                                        <th>Date</th>
-                                        <th>Customer</th>
-                                        <th>Bill No</th>
-                                        <th className="text-end">Petrol (₹)</th>
-                                        <th className="text-end">Diesel (₹)</th>
-                                        <th className="text-end pe-3">Total (₹)</th>
-                                        <th className="text-center">Ledger</th>
+                                        <th className="ps-3">{t("#")}</th>
+                                        <th>{t("Date")}</th>
+                                        <th>{t("Customer")}</th>
+                                        <th>{t("Bill No")}</th>
+                                        <th className="text-end">{t("Petrol (₹)")}</th>
+                                        <th className="text-end">{t("Diesel (₹)")}</th>
+                                        <th className="text-end pe-3">{t("Total (₹)")}</th>
+                                        <th className="text-center">{t("Ledger")}</th>
                                     </tr>
                                 </thead>
 
@@ -323,8 +326,8 @@ function UdhariSalesTab() {
 
                                             <td className="text-center">
                                                 {row.ledger
-                                                    ? <span className="badge bg-success">✓ Done</span>
-                                                    : <span className="badge bg-light text-secondary border">Pending</span>
+                                                    ? <span className="badge bg-success">{t("✓ Done")}</span>
+                                                    : <span className="badge bg-light text-secondary border">{t("Pending")}</span>
                                                 }
                                             </td>
 
@@ -337,7 +340,7 @@ function UdhariSalesTab() {
                                     <tfoot className="table-secondary fw-bold">
                                         <tr>
                                             <td colSpan={4} className="ps-3 text-end">
-                                                Total ({totals.count} records)
+                                                {t("Total ({count} records)", { count: totals.count })}
                                             </td>
                                             <td className="text-end text-success">
                                                 ₹{formatAmount(totals.totalPetrol)}
@@ -363,7 +366,7 @@ function UdhariSalesTab() {
             {!searched && !loading && (
                 <div className="text-center py-5 text-muted">
                     <i className="bi bi-search fs-1 d-block mb-2 opacity-25" />
-                    Enter a name or date above and click Search
+                    {t("Enter a name or date above and click Search")}
                 </div>
             )}
 
@@ -385,6 +388,8 @@ function UdhariCreditsTab() {
     const [loading, setLoading]       = useState(false);
     const [error, setError]           = useState("");
     const [searched, setSearched]     = useState(false);
+
+    const t = useT();
 
 
     // --------------------------------------------------
@@ -417,7 +422,7 @@ function UdhariCreditsTab() {
 
             if (!res.ok) {
                 throw new Error(
-                    result.message || "Failed to search credits"
+                    result.message || t("Failed to search credits")
                 );
             }
 
@@ -425,7 +430,7 @@ function UdhariCreditsTab() {
             setTotals(result.data.totals);
 
         } catch (err) {
-            setError(err.message || "Failed to search credits");
+            setError(err.message || t("Failed to search credits"));
         } finally {
             setLoading(false);
         }
@@ -462,15 +467,15 @@ function UdhariCreditsTab() {
 
     const methodBadge = (method) => {
         if (method === "CASH") {
-            return <span className="badge bg-success">{method}</span>;
+            return <span className="badge bg-success">{t(method)}</span>;
         }
         if (method === "PHONEPE") {
-            return <span className="badge bg-primary">{method}</span>;
+            return <span className="badge bg-primary">{t(method)}</span>;
         }
         if (method === "PAYTM") {
-            return <span className="badge bg-info text-dark">{method}</span>;
+            return <span className="badge bg-info text-dark">{t(method)}</span>;
         }
-        return <span className="badge bg-secondary">{method}</span>;
+        return <span className="badge bg-secondary">{t(method)}</span>;
     };
 
 
@@ -493,12 +498,12 @@ function UdhariCreditsTab() {
                         {/* NAME */}
                         <div className="col-12 col-md-4">
                             <label className="form-label fw-semibold small mb-1">
-                                Customer Name
+                                {t("Customer Name")}
                             </label>
                             <input
                                 type="text"
                                 className="form-control"
-                                placeholder="Search by name..."
+                                placeholder={t("Search by name...")}
                                 value={nameFilter}
                                 onChange={e => setNameFilter(e.target.value)}
                                 onKeyDown={handleKeyDown}
@@ -508,7 +513,7 @@ function UdhariCreditsTab() {
                         {/* DATE */}
                         <div className="col-12 col-md-3">
                             <label className="form-label fw-semibold small mb-1">
-                                Date
+                                {t("Date")}
                             </label>
                             <input
                                 type="date"
@@ -530,14 +535,14 @@ function UdhariCreditsTab() {
                                     ? <span className="spinner-border spinner-border-sm me-2" />
                                     : <i className="bi bi-search me-2" />
                                 }
-                                Search
+                                {t("Search")}
                             </button>
                             <button
                                 className="btn btn-outline-secondary px-3"
                                 onClick={handleClear}
                                 disabled={loading}
                             >
-                                Clear
+                                {t("Clear")}
                             </button>
                         </div>
 
@@ -568,7 +573,7 @@ function UdhariCreditsTab() {
                     <div className="col-6 col-md-3">
                         <div className="card border-0 shadow-sm text-center h-100">
                             <div className="card-body py-3">
-                                <div className="text-muted small mb-1">Records</div>
+                                <div className="text-muted small mb-1">{t("Records")}</div>
                                 <div className="fs-4 fw-bold text-dark">
                                     {totals.count}
                                 </div>
@@ -579,7 +584,7 @@ function UdhariCreditsTab() {
                     <div className="col-6 col-md-3">
                         <div className="card border-0 shadow-sm text-center h-100">
                             <div className="card-body py-3">
-                                <div className="text-muted small mb-1">Cash Received</div>
+                                <div className="text-muted small mb-1">{t("Cash Received")}</div>
                                 <div className="fs-5 fw-bold text-success">
                                     ₹{formatAmount(totals.cashTotal)}
                                 </div>
@@ -590,7 +595,7 @@ function UdhariCreditsTab() {
                     <div className="col-6 col-md-3">
                         <div className="card border-0 shadow-sm text-center h-100">
                             <div className="card-body py-3">
-                                <div className="text-muted small mb-1">Online Received</div>
+                                <div className="text-muted small mb-1">{t("Online Received")}</div>
                                 <div className="fs-5 fw-bold text-primary">
                                     ₹{formatAmount(totals.onlineTotal)}
                                 </div>
@@ -601,7 +606,7 @@ function UdhariCreditsTab() {
                     <div className="col-6 col-md-3">
                         <div className="card border-0 shadow-sm text-center h-100">
                             <div className="card-body py-3">
-                                <div className="text-muted small mb-1">Total Received</div>
+                                <div className="text-muted small mb-1">{t("Total Received")}</div>
                                 <div className="fs-5 fw-bold text-dark">
                                     ₹{formatAmount(totals.totalAmount)}
                                 </div>
@@ -621,7 +626,7 @@ function UdhariCreditsTab() {
                 records.length === 0 ? (
                     <div className="text-center py-5 text-muted">
                         <i className="bi bi-inbox fs-1 d-block mb-2" />
-                        No credit records found
+                        {t("No credit records found")}
                     </div>
                 ) : (
                     <div className="card border-0 shadow-sm">
@@ -630,12 +635,12 @@ function UdhariCreditsTab() {
 
                                 <thead className="table-dark">
                                     <tr>
-                                        <th className="ps-3">#</th>
-                                        <th>Date</th>
-                                        <th>Customer</th>
-                                        <th>Payment Method</th>
-                                        <th className="text-end pe-3">Amount (₹)</th>
-                                        <th className="text-center">Ledger</th>
+                                        <th className="ps-3">{t("#")}</th>
+                                        <th>{t("Date")}</th>
+                                        <th>{t("Customer")}</th>
+                                        <th>{t("Payment Method")}</th>
+                                        <th className="text-end pe-3">{t("Amount (₹)")}</th>
+                                        <th className="text-center">{t("Ledger")}</th>
                                     </tr>
                                 </thead>
 
@@ -667,8 +672,8 @@ function UdhariCreditsTab() {
 
                                             <td className="text-center">
                                                 {row.ledger
-                                                    ? <span className="badge bg-success">✓ Done</span>
-                                                    : <span className="badge bg-light text-secondary border">Pending</span>
+                                                    ? <span className="badge bg-success">{t("✓ Done")}</span>
+                                                    : <span className="badge bg-light text-secondary border">{t("Pending")}</span>
                                                 }
                                             </td>
 
@@ -681,7 +686,7 @@ function UdhariCreditsTab() {
                                     <tfoot className="table-secondary fw-bold">
                                         <tr>
                                             <td colSpan={4} className="ps-3 text-end">
-                                                Total ({totals.count} records)
+                                                {t("Total ({count} records)", { count: totals.count })}
                                             </td>
                                             <td className="text-end pe-3 text-success">
                                                 ₹{formatAmount(totals.totalAmount)}
@@ -701,7 +706,7 @@ function UdhariCreditsTab() {
             {!searched && !loading && (
                 <div className="text-center py-5 text-muted">
                     <i className="bi bi-search fs-1 d-block mb-2 opacity-25" />
-                    Enter a name or date above and click Search
+                    {t("Enter a name or date above and click Search")}
                 </div>
             )}
 
@@ -718,15 +723,17 @@ function Udhari() {
 
     const [activeTab, setActiveTab] = useState("sales");
 
+    const t = useT();
+
     return (
         <div className="container-fluid py-4 px-4">
 
             {/* HEADER */}
             <div className="d-flex align-items-center gap-3 mb-4">
                 <div>
-                    <h4 className="fw-bold mb-0">Udhari Records</h4>
+                    <h4 className="fw-bold mb-0">{t("Udhari Records")}</h4>
                     <p className="text-muted small mb-0">
-                        Search credit sales and repayments by customer name or date
+                        {t("Search credit sales and repayments by customer name or date")}
                     </p>
                 </div>
             </div>
@@ -740,7 +747,7 @@ function Udhari() {
                         className={`nav-link ${activeTab === "sales" ? "active fw-semibold" : ""}`}
                         onClick={() => setActiveTab("sales")}
                     >
-                        Udhari (Credit Sales)
+                        {t("Udhari (Credit Sales)")}
                     </button>
                 </li>
 
@@ -749,7 +756,7 @@ function Udhari() {
                         className={`nav-link ${activeTab === "credits" ? "active fw-semibold" : ""}`}
                         onClick={() => setActiveTab("credits")}
                     >
-                        Udhari Credits (Repayments)
+                        {t("Udhari Credits (Repayments)")}
                     </button>
                 </li>
 

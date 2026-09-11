@@ -13,6 +13,7 @@ db.exec(`
 
         machine_no INTEGER NOT NULL,
         nozzle TEXT NOT NULL,
+
         fuel_type TEXT NOT NULL,
 
         closing_reading REAL NOT NULL DEFAULT 0,
@@ -293,6 +294,97 @@ db.exec(`
 
 
 // ======================================================
+// AUTH USERS
+// ======================================================
+
+db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        mobile TEXT,
+        is_first_login INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CHECK (LENGTH(TRIM(username)) > 0)
+    );
+`);
+
+
+// ======================================================
+// ADMIN
+// ======================================================
+
+db.exec(`
+    CREATE TABLE IF NOT EXISTS admin (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+`);
+
+
+// ======================================================
+// SIGNUP REQUESTS (pending admin approval)
+// ======================================================
+
+db.exec(`
+    CREATE TABLE IF NOT EXISTS signup_requests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        password_hash TEXT NOT NULL,
+        password_plain TEXT,
+        mobile TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        approved_by INTEGER,
+        approved_at TEXT,
+        rejected_at TEXT,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (approved_by) REFERENCES admin(id),
+        UNIQUE(username)
+    );
+`);
+
+// Migration: add password_plain column to existing
+// signup_requests table (for DBs created before this
+// column existed), so the admin can view user passwords.
+const signupCols = db.prepare(
+    `PRAGMA table_info(signup_requests)`
+).all();
+
+if (
+    !signupCols.some(
+        (col) => col.name === "password_plain"
+    )
+) {
+    db.exec(`
+        ALTER TABLE signup_requests
+        ADD COLUMN password_plain TEXT
+    `);
+    console.log(
+        "signup_requests.password_plain column added (migration)."
+    );
+}
+
+
+// ======================================================
+// ADMIN LOGIN LOGS
+// ======================================================
+
+db.exec(`
+    CREATE TABLE IF NOT EXISTS admin_login_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        admin_id INTEGER NOT NULL,
+        login_time TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        ip_address TEXT,
+        FOREIGN KEY (admin_id) REFERENCES admin(id)
+    );
+`);
+
+
+// ======================================================
 // DONE
 // ======================================================
 
@@ -301,3 +393,6 @@ console.log("udhari tables initialized.");
 console.log("daily_settlements table initialized.");
 console.log("expenditures table initialized.");
 console.log("ledger_customers table initialized.");
+console.log("admin table initialized.");
+console.log("signup_requests table initialized.");
+console.log("admin_login_logs table initialized.");

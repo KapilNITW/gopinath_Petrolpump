@@ -8,6 +8,15 @@ server/db/*.db
 server/db/*.db-shm
 server/db/*.db-wal
 
+# Auto backups
+server/backups/
+
+# Google service account key (contains a private key)
+server/gopinathpetrolpump-fc5f1cbb7790.json
+
+# Google Drive OAuth refresh token (do not commit)
+server/db/drive_tokens.json
+
 # Build output
 client/dist/
 client/.vite/

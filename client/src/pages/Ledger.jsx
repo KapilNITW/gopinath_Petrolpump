@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 
+import {
+    downloadLedgerPdf,
+    printLedger
+} from "../utils/ledgerExport";
+import { useT } from "../i18n/LanguageContext";
+
 
 const API_URL = "http://localhost:5000/api";
 
@@ -30,6 +36,8 @@ function fmt(val) {
 // ======================================================
 
 function CustomerList({ selected, onSelect, refreshTrigger }) {
+
+    const t = useT();
 
     const [customers, setCustomers] = useState([]);
     const [search, setSearch]       = useState("");
@@ -107,7 +115,7 @@ function CustomerList({ selected, onSelect, refreshTrigger }) {
 
     const handleSave = async () => {
         if (!formName.trim()) {
-            setFormError("Name is required");
+            setFormError(t("Name is required"));
             return;
         }
         try {
@@ -153,7 +161,7 @@ function CustomerList({ selected, onSelect, refreshTrigger }) {
     // --------------------------------------------------
 
     const handleDelete = async (c) => {
-        if (!window.confirm(`Remove "${c.name}" from ledger?`)) return;
+        if (!window.confirm(`${t("Remove")} "${c.name}" ${t("from ledger?")}`)) return;
         try {
             setDeletingId(c.id);
             const res    = await fetch(
@@ -181,12 +189,12 @@ function CustomerList({ selected, onSelect, refreshTrigger }) {
 
             {/* Header */}
             <div className="d-flex align-items-center justify-content-between p-3 border-bottom">
-                <h6 className="fw-bold mb-0">Ledger Customers</h6>
+                <h6 className="fw-bold mb-0">{t("Ledger Customers")}</h6>
                 <button
                     className="btn btn-dark btn-sm"
                     onClick={openAdd}
                 >
-                    + Add
+                    + {t("Add")}
                 </button>
             </div>
 
@@ -195,7 +203,7 @@ function CustomerList({ selected, onSelect, refreshTrigger }) {
                 <input
                     type="text"
                     className="form-control form-control-sm"
-                    placeholder="Search name or mobile..."
+                    placeholder={t("Search name or mobile...")}
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                 />
@@ -211,11 +219,11 @@ function CustomerList({ selected, onSelect, refreshTrigger }) {
                 {loading ? (
                     <div className="text-center py-4 text-muted small">
                         <span className="spinner-border spinner-border-sm me-2" />
-                        Loading...
+                        {t("Loading...")}
                     </div>
                 ) : customers.length === 0 ? (
                     <div className="text-center py-4 text-muted small">
-                        No customers found
+                        {t("No customers found")}
                     </div>
                 ) : (
                     <ul className="list-group list-group-flush">
@@ -272,7 +280,7 @@ function CustomerList({ selected, onSelect, refreshTrigger }) {
 
             {/* Total count */}
             <div className="p-2 border-top text-muted small text-center">
-                {customers.length} customer{customers.length !== 1 ? "s" : ""}
+                {customers.length} {t("customer(s)")}
             </div>
 
 
@@ -294,7 +302,7 @@ function CustomerList({ selected, onSelect, refreshTrigger }) {
 
                             <div className="modal-header">
                                 <h5 className="modal-title">
-                                    {editTarget ? "Edit Customer" : "Add Customer to Ledger"}
+                                    {editTarget ? t("Edit Customer") : t("Add Customer to Ledger")}
                                 </h5>
                                 <button
                                     className="btn-close"
@@ -312,12 +320,12 @@ function CustomerList({ selected, onSelect, refreshTrigger }) {
 
                                 <div className="mb-3">
                                     <label className="form-label fw-semibold">
-                                        Name <span className="text-danger">*</span>
+                                        {t("Name")} <span className="text-danger">*</span>
                                     </label>
                                     <input
                                         type="text"
                                         className="form-control"
-                                        placeholder="Customer name"
+                                        placeholder={t("Customer name")}
                                         value={formName}
                                         onChange={e => setFormName(e.target.value)}
                                         onKeyDown={e => e.key === "Enter" && handleSave()}
@@ -326,22 +334,22 @@ function CustomerList({ selected, onSelect, refreshTrigger }) {
                                 </div>
 
                                 <div className="mb-3">
-                                    <label className="form-label fw-semibold">Mobile</label>
+                                    <label className="form-label fw-semibold">{t("Mobile")}</label>
                                     <input
                                         type="tel"
                                         className="form-control"
-                                        placeholder="Mobile number"
+                                        placeholder={t("Mobile number")}
                                         value={formMobile}
                                         onChange={e => setFormMobile(e.target.value)}
                                     />
                                 </div>
 
                                 <div className="mb-2">
-                                    <label className="form-label fw-semibold">Notes</label>
+                                    <label className="form-label fw-semibold">{t("Notes")}</label>
                                     <input
                                         type="text"
                                         className="form-control"
-                                        placeholder="Any notes (optional)"
+                                        placeholder={t("Any notes (optional)")}
                                         value={formNotes}
                                         onChange={e => setFormNotes(e.target.value)}
                                     />
@@ -355,7 +363,7 @@ function CustomerList({ selected, onSelect, refreshTrigger }) {
                                     onClick={closeForm}
                                     disabled={saving}
                                 >
-                                    Cancel
+                                    {t("Cancel")}
                                 </button>
                                 <button
                                     className="btn btn-dark"
@@ -363,8 +371,8 @@ function CustomerList({ selected, onSelect, refreshTrigger }) {
                                     disabled={saving}
                                 >
                                     {saving
-                                        ? <><span className="spinner-border spinner-border-sm me-2" />Saving...</>
-                                        : editTarget ? "Update" : "Add to Ledger"
+                                        ? <><span className="spinner-border spinner-border-sm me-2" />{t("Saving...")}</>
+                                        : editTarget ? t("Update") : t("Add to Ledger")
                                     }
                                 </button>
                             </div>
@@ -405,6 +413,8 @@ const emptyCreditForm = () => ({
 
 function UdhariHistory({ customer }) {
 
+    const t = useT();
+
     const [data, setData]         = useState(null);
     const [loading, setLoading]   = useState(false);
     const [error, setError]       = useState("");
@@ -418,6 +428,8 @@ function UdhariHistory({ customer }) {
     const [formError, setFormError] = useState("");
     const [saving, setSaving]     = useState(false);
     const [deletingId, setDeletingId] = useState(null);
+    const [printLang, setPrintLang] = useState("en");
+    const [pdfBusy, setPdfBusy]   = useState(false);
 
 
     // --------------------------------------------------
@@ -501,9 +513,9 @@ function UdhariHistory({ customer }) {
                 const petrol = Number(formData.petrolAmount) || 0;
                 const diesel = Number(formData.dieselAmount) || 0;
 
-                if (!formData.saleDate) throw new Error("Date is required");
-                if (petrol <= 0 && diesel <= 0) throw new Error("Enter petrol or diesel amount");
-                if (petrol < 0 || diesel < 0)   throw new Error("Amount cannot be negative");
+                if (!formData.saleDate) throw new Error(t("Date is required"));
+                if (petrol <= 0 && diesel <= 0) throw new Error(t("Enter petrol or diesel amount"));
+                if (petrol < 0 || diesel < 0)   throw new Error(t("Amount cannot be negative"));
 
                 body = {
                     saleDate:     formData.saleDate,
@@ -521,8 +533,8 @@ function UdhariHistory({ customer }) {
             } else {
                 const amount = Number(formData.totalAmount) || 0;
 
-                if (!formData.creditDate) throw new Error("Date is required");
-                if (amount <= 0)          throw new Error("Amount must be greater than 0");
+                if (!formData.creditDate) throw new Error(t("Date is required"));
+                if (amount <= 0)          throw new Error(t("Amount must be greater than 0"));
 
                 body = {
                     creditDate:    formData.creditDate,
@@ -562,10 +574,10 @@ function UdhariHistory({ customer }) {
 
     const handleDelete = async (type, row) => {
         const label = type === "sale"
-            ? `udhari of ₹${fmt(row.total_amount)} on ${formatDate(row.sale_date)}`
-            : `payment of ₹${fmt(row.total_amount)} on ${formatDate(row.credit_date)}`;
+            ? `${t("udhari of")} ₹${fmt(row.total_amount)} ${t("on")} ${formatDate(row.sale_date)}`
+            : `${t("payment of")} ₹${fmt(row.total_amount)} ${t("on")} ${formatDate(row.credit_date)}`;
 
-        if (!window.confirm(`Delete ${label}?`)) return;
+        if (!window.confirm(`${t("Delete")} ${label}?`)) return;
 
         try {
             setDeletingId(row.id);
@@ -593,7 +605,7 @@ function UdhariHistory({ customer }) {
         return (
             <div className="d-flex flex-column align-items-center justify-content-center h-100 text-muted py-5">
                 <i className="bi bi-person-circle fs-1 opacity-25 mb-3" />
-                <p className="small">Select a customer to view history</p>
+                <p className="small">{t("Select a customer to view history")}</p>
             </div>
         );
     }
@@ -601,7 +613,7 @@ function UdhariHistory({ customer }) {
     if (loading) {
         return (
             <div className="d-flex align-items-center justify-content-center h-100 text-muted">
-                <span className="spinner-border spinner-border-sm me-2" /> Loading...
+                <span className="spinner-border spinner-border-sm me-2" /> {t("Loading...")}
             </div>
         );
     }
@@ -622,31 +634,77 @@ function UdhariHistory({ customer }) {
 
             {/* ---- Customer header + balance ---- */}
             <div className="p-3 border-bottom bg-light">
-                <h6 className="fw-bold mb-1">{customer.name}</h6>
-                {customer.mobile && (
-                    <div className="small text-muted mb-2">📞 {customer.mobile}</div>
-                )}
+                <div className="d-flex align-items-start justify-content-between mb-2">
+                    <div>
+                        <h6 className="fw-bold mb-1">{customer.name}</h6>
+                        {customer.mobile && (
+                            <div className="small text-muted">📞 {customer.mobile}</div>
+                        )}
+                    </div>
+                    <div className="d-flex gap-2 align-items-center">
+                        <div className="btn-group btn-group-sm" role="group" aria-label={t("Language")}>
+                            <button
+                                type="button"
+                                className={`btn btn-sm ${printLang === "en" ? "btn-secondary" : "btn-outline-secondary"}`}
+                                onClick={() => setPrintLang("en")}
+                            >
+                                EN
+                            </button>
+                            <button
+                                type="button"
+                                className={`btn btn-sm ${printLang === "hi" ? "btn-secondary" : "btn-outline-secondary"}`}
+                                onClick={() => setPrintLang("hi")}
+                            >
+                                हिं
+                            </button>
+                        </div>
+                        <button
+                            className="btn btn-dark btn-sm"
+                            title={t("Download this customer's full statement as PDF")}
+                            disabled={pdfBusy}
+                            onClick={async () => {
+                                setPdfBusy(true);
+                                try {
+                                    await downloadLedgerPdf(data, printLang);
+                                } finally {
+                                    setPdfBusy(false);
+                                }
+                            }}
+                        >
+                            {pdfBusy
+                                ? <><span className="spinner-border spinner-border-sm me-1" /> {t("Preparing PDF...")}</>
+                                : <>📄 PDF</>}
+                        </button>
+                        <button
+                            className="btn btn-outline-dark btn-sm"
+                            title={t("Print this customer's full statement")}
+                            onClick={() => printLedger(data, printLang)}
+                        >
+                            🖨 {t("Print")}
+                        </button>
+                    </div>
+                </div>
                 <div className="row g-2">
                     <div className="col-4">
                         <div className="card border-0 bg-white shadow-sm text-center py-2">
-                            <div className="small text-muted">Total Udhari</div>
+                            <div className="small text-muted">{t("Total Udhari")}</div>
                             <div className="fw-bold text-danger">₹{fmt(totals.totalUdhari)}</div>
                         </div>
                     </div>
                     <div className="col-4">
                         <div className="card border-0 bg-white shadow-sm text-center py-2">
-                            <div className="small text-muted">Total Paid</div>
+                            <div className="small text-muted">{t("Total Paid")}</div>
                             <div className="fw-bold text-success">₹{fmt(totals.totalCredit)}</div>
                         </div>
                     </div>
                     <div className={`col-4`}>
                         <div className={`card border-0 shadow-sm text-center py-2
                             ${totals.netBalance > 0 ? "bg-danger bg-opacity-10" : "bg-success bg-opacity-10"}`}>
-                            <div className="small text-muted">Net Balance</div>
+                            <div className="small text-muted">{t("Net Balance")}</div>
                             <div className={`fw-bold ${totals.netBalance > 0 ? "text-danger" : "text-success"}`}>
                                 ₹{fmt(Math.abs(totals.netBalance))}
                                 <span className="ms-1 small fw-normal">
-                                    {totals.netBalance > 0 ? "due" : totals.netBalance < 0 ? "overpaid" : "clear"}
+                                    {totals.netBalance > 0 ? t("due") : totals.netBalance < 0 ? t("overpaid") : t("clear")}
                                 </span>
                             </div>
                         </div>
@@ -663,7 +721,7 @@ function UdhariHistory({ customer }) {
                             className={`nav-link py-2 ${tab === "sales" ? "active fw-semibold" : ""}`}
                             onClick={() => setTab("sales")}
                         >
-                            Udhari Given
+                            {t("Udhari Given")}
                             <span className={`ms-1 badge ${tab === "sales" ? "bg-dark" : "bg-secondary"}`}
                                   style={{ fontSize: "0.65rem" }}>
                                 {sales.length}
@@ -675,7 +733,7 @@ function UdhariHistory({ customer }) {
                             className={`nav-link py-2 ${tab === "credits" ? "active fw-semibold" : ""}`}
                             onClick={() => setTab("credits")}
                         >
-                            Payments Received
+                            {t("Payments Received")}
                             <span className={`ms-1 badge ${tab === "credits" ? "bg-dark" : "bg-secondary"}`}
                                   style={{ fontSize: "0.65rem" }}>
                                 {credits.length}
@@ -689,7 +747,7 @@ function UdhariHistory({ customer }) {
                     className="btn btn-dark btn-sm mb-1"
                     onClick={() => openAdd(tab === "sales" ? "sale" : "credit")}
                 >
-                    + Add {tab === "sales" ? "Udhari" : "Payment"}
+                    + {t("Add")} {tab === "sales" ? t("Udhari") : t("Payment")}
                 </button>
             </div>
 
@@ -702,19 +760,19 @@ function UdhariHistory({ customer }) {
                     sales.length === 0 ? (
                         <div className="text-center py-5 text-muted small">
                             <i className="bi bi-inbox d-block fs-2 mb-2 opacity-25" />
-                            No udhari records — click "+ Add Udhari" to add one
+                            {t("No udhari records")} — {t("click")} "+ {t("Add Udhari")}" {t("to add one")}
                         </div>
                     ) : (
                         <table className="table table-sm table-hover align-middle">
                             <thead className="table-dark">
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Bill No</th>
-                                    <th className="text-end">Petrol</th>
-                                    <th className="text-end">Diesel</th>
-                                    <th className="text-end">Total</th>
-                                    <th className="text-center">Ledger</th>
-                                    <th className="text-center" style={{ width: 80 }}>Actions</th>
+                                    <th>{t("Date")}</th>
+                                    <th>{t("Bill No")}</th>
+                                    <th className="text-end">{t("Petrol")}</th>
+                                    <th className="text-end">{t("Diesel")}</th>
+                                    <th className="text-end">{t("Total")}</th>
+                                    <th className="text-center">{t("Ledger")}</th>
+                                    <th className="text-center" style={{ width: 80 }}>{t("Actions")}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -751,12 +809,12 @@ function UdhariHistory({ customer }) {
                                             <div className="d-flex gap-1 justify-content-center">
                                                 <button
                                                     className="btn btn-outline-secondary btn-sm py-0 px-2"
-                                                    title="Edit"
+                                                    title={t("Edit")}
                                                     onClick={() => openEdit("sale", row)}
                                                 >✏️</button>
                                                 <button
                                                     className="btn btn-outline-danger btn-sm py-0 px-2"
-                                                    title="Delete"
+                                                    title={t("Delete")}
                                                     disabled={deletingId === row.id}
                                                     onClick={() => handleDelete("sale", row)}
                                                 >🗑</button>
@@ -767,7 +825,7 @@ function UdhariHistory({ customer }) {
                             </tbody>
                             <tfoot className="table-light fw-bold">
                                 <tr>
-                                    <td colSpan={4} className="text-end">Total Udhari</td>
+                                    <td colSpan={4} className="text-end">{t("Total Udhari")}</td>
                                     <td className="text-end text-danger">₹{fmt(totals.totalUdhari)}</td>
                                     <td colSpan={2} />
                                 </tr>
@@ -781,17 +839,17 @@ function UdhariHistory({ customer }) {
                     credits.length === 0 ? (
                         <div className="text-center py-5 text-muted small">
                             <i className="bi bi-inbox d-block fs-2 mb-2 opacity-25" />
-                            No payments — click "+ Add Payment" to add one
+                            {t("No payments")} — {t("click")} "+ {t("Add")} {t("Payment")}" {t("to add one")}
                         </div>
                     ) : (
                         <table className="table table-sm table-hover align-middle">
                             <thead className="table-dark">
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Method</th>
-                                    <th className="text-end">Amount</th>
-                                    <th className="text-center">Ledger</th>
-                                    <th className="text-center" style={{ width: 80 }}>Actions</th>
+                                    <th>{t("Date")}</th>
+                                    <th>{t("Method")}</th>
+                                    <th className="text-end">{t("Amount")}</th>
+                                    <th className="text-center">{t("Ledger")}</th>
+                                    <th className="text-center" style={{ width: 80 }}>{t("Actions")}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -821,12 +879,12 @@ function UdhariHistory({ customer }) {
                                             <div className="d-flex gap-1 justify-content-center">
                                                 <button
                                                     className="btn btn-outline-secondary btn-sm py-0 px-2"
-                                                    title="Edit"
+                                                    title={t("Edit")}
                                                     onClick={() => openEdit("credit", row)}
                                                 >✏️</button>
                                                 <button
                                                     className="btn btn-outline-danger btn-sm py-0 px-2"
-                                                    title="Delete"
+                                                    title={t("Delete")}
                                                     disabled={deletingId === row.id}
                                                     onClick={() => handleDelete("credit", row)}
                                                 >🗑</button>
@@ -837,7 +895,7 @@ function UdhariHistory({ customer }) {
                             </tbody>
                             <tfoot className="table-light fw-bold">
                                 <tr>
-                                    <td colSpan={2} className="text-end">Total Received</td>
+                                    <td colSpan={2} className="text-end">{t("Total Received")}</td>
                                     <td className="text-end text-success">₹{fmt(totals.totalCredit)}</td>
                                     <td colSpan={2} />
                                 </tr>
@@ -867,8 +925,8 @@ function UdhariHistory({ customer }) {
 
                             <div className="modal-header">
                                 <h5 className="modal-title">
-                                    {modal.mode === "add" ? "Add" : "Edit"}{" "}
-                                    {modal.type === "sale" ? "Udhari Given" : "Payment Received"}
+                                    {modal.mode === "add" ? t("Add") : t("Edit")}{" "}
+                                    {modal.type === "sale" ? t("Udhari Given") : t("Payment Received")}
                                     {" "}— {customer.name}
                                 </h5>
                                 <button className="btn-close" onClick={closeModal} />
@@ -887,7 +945,7 @@ function UdhariHistory({ customer }) {
                                     <>
                                         <div className="mb-3">
                                             <label className="form-label fw-semibold">
-                                                Date <span className="text-danger">*</span>
+                                                {t("Date")} <span className="text-danger">*</span>
                                             </label>
                                             <input
                                                 type="date"
@@ -897,18 +955,18 @@ function UdhariHistory({ customer }) {
                                             />
                                         </div>
                                         <div className="mb-3">
-                                            <label className="form-label fw-semibold">Bill No</label>
+                                            <label className="form-label fw-semibold">{t("Bill No")}</label>
                                             <input
                                                 type="text"
                                                 className="form-control"
-                                                placeholder="Bill number (optional)"
+                                                placeholder={t("Bill number (optional)")}
                                                 value={formData.billNo}
                                                 onChange={e => setField("billNo", e.target.value)}
                                             />
                                         </div>
                                         <div className="row g-3 mb-3">
                                             <div className="col-6">
-                                                <label className="form-label fw-semibold">Petrol Amount (₹)</label>
+                                                <label className="form-label fw-semibold">{t("Petrol Amount")} (₹)</label>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -920,7 +978,7 @@ function UdhariHistory({ customer }) {
                                                 />
                                             </div>
                                             <div className="col-6">
-                                                <label className="form-label fw-semibold">Diesel Amount (₹)</label>
+                                                <label className="form-label fw-semibold">{t("Diesel Amount")} (₹)</label>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -934,7 +992,7 @@ function UdhariHistory({ customer }) {
                                         </div>
                                         {(Number(formData.petrolAmount) > 0 || Number(formData.dieselAmount) > 0) && (
                                             <div className="mb-3 p-2 bg-light rounded text-end">
-                                                <span className="text-muted small me-2">Total:</span>
+                                                <span className="text-muted small me-2">{t("Total")}:</span>
                                                 <span className="fw-bold text-danger">
                                                     ₹{fmt((Number(formData.petrolAmount) || 0) + (Number(formData.dieselAmount) || 0))}
                                                 </span>
@@ -949,7 +1007,7 @@ function UdhariHistory({ customer }) {
                                                 onChange={e => setField("ledger", e.target.checked)}
                                             />
                                             <label className="form-check-label" htmlFor="saleLedger">
-                                                Mark in Ledger
+                                                {t("Mark in Ledger")}
                                             </label>
                                         </div>
                                     </>
@@ -960,7 +1018,7 @@ function UdhariHistory({ customer }) {
                                     <>
                                         <div className="mb-3">
                                             <label className="form-label fw-semibold">
-                                                Date <span className="text-danger">*</span>
+                                                {t("Date")} <span className="text-danger">*</span>
                                             </label>
                                             <input
                                                 type="date"
@@ -971,7 +1029,7 @@ function UdhariHistory({ customer }) {
                                         </div>
                                         <div className="mb-3">
                                             <label className="form-label fw-semibold">
-                                                Amount (₹) <span className="text-danger">*</span>
+                                                {t("Amount")} (₹) <span className="text-danger">*</span>
                                             </label>
                                             <input
                                                 type="number"
@@ -984,15 +1042,15 @@ function UdhariHistory({ customer }) {
                                             />
                                         </div>
                                         <div className="mb-3">
-                                            <label className="form-label fw-semibold">Payment Method</label>
+                                            <label className="form-label fw-semibold">{t("Payment Method")}</label>
                                             <select
                                                 className="form-select"
                                                 value={formData.paymentMethod}
                                                 onChange={e => setField("paymentMethod", e.target.value)}
                                             >
-                                                <option value="CASH">Cash</option>
-                                                <option value="PHONEPE">PhonePe</option>
-                                                <option value="PAYTM">Paytm</option>
+                                                <option value="CASH">{t("Cash")}</option>
+                                                <option value="PHONEPE">{t("PhonePe")}</option>
+                                                <option value="PAYTM">{t("Paytm")}</option>
                                             </select>
                                         </div>
                                         <div className="form-check">
@@ -1004,7 +1062,7 @@ function UdhariHistory({ customer }) {
                                                 onChange={e => setField("ledger", e.target.checked)}
                                             />
                                             <label className="form-check-label" htmlFor="creditLedger">
-                                                Mark in Ledger
+                                                {t("Mark in Ledger")}
                                             </label>
                                         </div>
                                     </>
@@ -1018,7 +1076,7 @@ function UdhariHistory({ customer }) {
                                     onClick={closeModal}
                                     disabled={saving}
                                 >
-                                    Cancel
+                                    {t("Cancel")}
                                 </button>
                                 <button
                                     className="btn btn-dark"
@@ -1026,8 +1084,8 @@ function UdhariHistory({ customer }) {
                                     disabled={saving}
                                 >
                                     {saving
-                                        ? <><span className="spinner-border spinner-border-sm me-2" />Saving...</>
-                                        : modal.mode === "add" ? "Add" : "Save Changes"
+                                        ? <><span className="spinner-border spinner-border-sm me-2" />{t("Saving...")}</>
+                                        : modal.mode === "add" ? t("Add") : t("Save Changes")
                                     }
                                 </button>
                             </div>
@@ -1048,6 +1106,8 @@ function UdhariHistory({ customer }) {
 
 function Ledger() {
 
+    const t = useT();
+
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [refreshTrigger, setRefreshTrigger]     = useState(0);
 
@@ -1060,9 +1120,9 @@ function Ledger() {
 
             {/* Header */}
             <div className="mb-4">
-                <h4 className="fw-bold mb-0">Ledger</h4>
+                <h4 className="fw-bold mb-0">{t("Ledger")}</h4>
                 <p className="text-muted small mb-0">
-                    Permanent credit customer register — track udhari given and payments received
+                    {t("Permanent credit customer register — track udhari given and payments received")}
                 </p>
             </div>
 

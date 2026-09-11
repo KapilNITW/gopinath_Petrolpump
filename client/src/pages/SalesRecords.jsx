@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getSalesByDate } from "../services/salesService";
+import { useT } from "../i18n/LanguageContext";
 
 const API_URL = "http://localhost:5000/api/sales";
 
@@ -19,6 +20,8 @@ function SalesRecords() {
     const [error, setError] = useState("");
 
     const [deletingId, setDeletingId] = useState(null);
+
+    const t = useT();
 
 
     // ==================================================
@@ -47,7 +50,7 @@ function SalesRecords() {
 
             setError(
                 error.message ||
-                "Failed to load sales"
+                t("Failed to load sales")
             );
 
         } finally {
@@ -78,7 +81,7 @@ function SalesRecords() {
 
         const confirmed =
             window.confirm(
-                "Are you sure you want to delete this sales record?"
+                t("Are you sure you want to delete this sales record?")
             );
 
         if (!confirmed) {
@@ -110,7 +113,7 @@ function SalesRecords() {
 
                 throw new Error(
                     result.message ||
-                    "Failed to delete sales record"
+                    t("Failed to delete sales record")
                 );
 
             }
@@ -133,7 +136,7 @@ function SalesRecords() {
 
             setError(
                 error.message ||
-                "Failed to delete sales record"
+                t("Failed to delete sales record")
             );
 
         } finally {
@@ -172,6 +175,47 @@ function SalesRecords() {
 
 
     // ==================================================
+    // PETROL / DIESEL BREAKDOWN
+    // ==================================================
+
+    const fuelBreakdown =
+        sales.reduce(
+            (acc, sale) => {
+
+                const litres =
+                    Number(sale.total_litres || 0);
+
+                const amount =
+                    Number(sale.total_amount || 0);
+
+                if (sale.fuel_type === "PETROL") {
+
+                    acc.petrolLitres += litres;
+
+                    acc.petrolAmount += amount;
+
+                } else {
+
+                    acc.dieselLitres += litres;
+
+                    acc.dieselAmount += amount;
+
+                }
+
+
+                return acc;
+
+            },
+            {
+                petrolLitres: 0,
+                petrolAmount: 0,
+                dieselLitres: 0,
+                dieselAmount: 0
+            }
+        );
+
+
+    // ==================================================
     // RENDER
     // ==================================================
 
@@ -188,11 +232,11 @@ function SalesRecords() {
                 <div>
 
                     <h2 className="mb-1">
-                        Daily Sales Records
+                        {t("Daily Sales Records")}
                     </h2>
 
                     <p className="text-muted mb-0">
-                        View saved nozzle-wise sales
+                        {t("View saved nozzle-wise sales")}
                     </p>
 
                 </div>
@@ -203,7 +247,7 @@ function SalesRecords() {
                 <div>
 
                     <label className="form-label fw-semibold">
-                        Select Date
+                        {t("Select Date")}
                     </label>
 
                     <input
@@ -235,8 +279,8 @@ function SalesRecords() {
                 >
 
                     {loading
-                        ? "Loading..."
-                        : "Load Records"}
+                        ? t("Loading...")
+                        : t("Load Records")}
 
                 </button>
 
@@ -268,8 +312,7 @@ function SalesRecords() {
 
                     <div className="alert alert-info">
 
-                        No sales records found
-                        for this date.
+                        {t("No sales records found for this date.")}
 
                     </div>
 
@@ -295,43 +338,43 @@ function SalesRecords() {
                                     <tr>
 
                                         <th>
-                                            Machine
+                                            {t("Machine")}
                                         </th>
 
                                         <th>
-                                            Nozzle
+                                            {t("Nozzle")}
                                         </th>
 
                                         <th>
-                                            Fuel
+                                            {t("Fuel")}
                                         </th>
 
                                         <th>
-                                            Closing
+                                            {t("Closing")}
                                         </th>
 
                                         <th>
-                                            Opening
+                                            {t("Opening")}
                                         </th>
 
                                         <th>
-                                            Testing
+                                            {t("Testing")}
                                         </th>
 
                                         <th>
-                                            Sale Litres
+                                            {t("Sale Litres")}
                                         </th>
 
                                         <th>
-                                            Rate / L
+                                            {t("Rate / L")}
                                         </th>
 
                                         <th>
-                                            Total Amount
+                                            {t("Total Amount")}
                                         </th>
 
                                         <th>
-                                            Action
+                                            {t("Action")}
                                         </th>
 
                                     </tr>
@@ -379,9 +422,7 @@ function SalesRecords() {
                                                                 : "bg-dark"
                                                         }`}
                                                     >
-                                                        {
-                                                            sale.fuel_type
-                                                        }
+                                                        {t(sale.fuel_type)}
                                                     </span>
 
                                                 </td>
@@ -475,8 +516,8 @@ function SalesRecords() {
 
                                                         {deletingId ===
                                                         sale.id
-                                                            ? "Deleting..."
-                                                            : "Delete"}
+                                                            ? t("Deleting...")
+                                                            : t("Delete")}
 
                                                     </button>
 
@@ -510,19 +551,84 @@ function SalesRecords() {
 
                     <div className="col-12 col-md-6">
 
+                        <div className="card shadow-sm stat-card">
+
+                            <div className="card-body">
+
+                                <div className="text-muted">
+                                    {t("Total Sale Litres")}
+                                </div>
+
+                                <div className="stat-value">
+
+                                    {totalLitres.toFixed(2)}
+                                    {" L"}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div className="col-12 col-md-6">
+
+                        <div className="card shadow-sm stat-card">
+
+                            <div className="card-body">
+
+                                <div className="text-muted">
+                                    {t("Total Sales Amount")}
+                                </div>
+
+                                <div className="stat-value">
+
+                                    ₹
+                                    {totalAmount.toFixed(2)}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            )}
+
+
+            {/* =========================================
+                PETROL / DIESEL BREAKDOWN
+            ========================================= */}
+
+            {sales.length > 0 && (
+
+                <div className="row g-3 mt-3">
+
+                    <div className="col-12 col-md-6">
+
                         <div className="card shadow-sm">
 
                             <div className="card-body">
 
                                 <div className="text-muted">
-                                    Total Sale Litres
+                                    <span className="badge bg-success">{t("Petrol")}</span>
                                 </div>
 
                                 <div className="fs-3 fw-bold">
 
-                                    {totalLitres.toFixed(2)}
+                                    {fuelBreakdown.petrolLitres.toFixed(2)}
                                     {" L"}
 
+                                </div>
+
+                                <div className="text-success fw-semibold">
+                                    ₹
+                                    {fuelBreakdown.petrolAmount.toFixed(2)}
                                 </div>
 
                             </div>
@@ -539,14 +645,19 @@ function SalesRecords() {
                             <div className="card-body">
 
                                 <div className="text-muted">
-                                    Total Sales Amount
+                                    <span className="badge bg-dark">{t("Diesel")}</span>
                                 </div>
 
                                 <div className="fs-3 fw-bold">
 
-                                    ₹
-                                    {totalAmount.toFixed(2)}
+                                    {fuelBreakdown.dieselLitres.toFixed(2)}
+                                    {" L"}
 
+                                </div>
+
+                                <div className="text-dark fw-semibold">
+                                    ₹
+                                    {fuelBreakdown.dieselAmount.toFixed(2)}
                                 </div>
 
                             </div>

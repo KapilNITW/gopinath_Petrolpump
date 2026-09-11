@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useT } from "../i18n/LanguageContext";
 
 
 const API_URL = "http://localhost:5000/api";
@@ -117,6 +118,8 @@ function formatAmount(val) {
 }
 
 function CellValue({ col, value }) {
+
+    const t = useT();
     const base = col.bold ? "fw-semibold" : "";
 
     switch (col.type) {
@@ -138,7 +141,7 @@ function CellValue({ col, value }) {
         case "fuel":
             return (
                 <span className={`badge ${value === "PETROL" ? "bg-success" : "bg-dark"}`}>
-                    {value}
+                    {t(value)}
                 </span>
             );
 
@@ -149,15 +152,15 @@ function CellValue({ col, value }) {
             const colors = { CASH: "success", PHONEPE: "primary", PAYTM: "info" };
             return (
                 <span className={`badge bg-${colors[value] || "secondary"} ${value === "PAYTM" ? "text-dark" : ""}`}>
-                    {value}
+                    {t(value)}
                 </span>
             );
         }
 
         case "ledger":
             return value
-                ? <span className="badge bg-success">✓ Done</span>
-                : <span className="badge bg-light text-secondary border">Pending</span>;
+                ? <span className="badge bg-success">{t("✓ Done")}</span>
+                : <span className="badge bg-light text-secondary border">{t("Pending")}</span>;
 
         case "nullable":
             return <span className={value ? base : "text-muted"}>{value || "-"}</span>;
@@ -177,6 +180,8 @@ function CellValue({ col, value }) {
 // ======================================================
 
 function Pagination({ pagination, onPage }) {
+
+    const t = useT();
     const { page, totalPages, total, limit } = pagination;
     if (totalPages <= 1) return null;
 
@@ -193,7 +198,9 @@ function Pagination({ pagination, onPage }) {
     return (
         <div className="d-flex align-items-center justify-content-between px-3 py-2 border-top bg-light">
             <span className="small text-muted">
-                Showing {start}–{end} of {total} rows
+                {t("Showing {start}–{end} of {total} rows", {
+                    start, end, total
+                })}
             </span>
             <nav>
                 <ul className="pagination pagination-sm mb-0">
@@ -236,6 +243,8 @@ function Pagination({ pagination, onPage }) {
 // ======================================================
 
 function TableViewer({ tableDef, rowCount }) {
+
+    const t = useT();
 
     const [rows, setRows]           = useState([]);
     const [pagination, setPagination] = useState(null);
@@ -323,11 +332,11 @@ function TableViewer({ tableDef, rowCount }) {
                     <div className="row g-3 align-items-end">
 
                         <div className="col-12 col-md-4">
-                            <label className="form-label fw-semibold small mb-1">Search</label>
+                            <label className="form-label fw-semibold small mb-1">{t("Search")}</label>
                             <input
                                 type="text"
                                 className="form-control form-control-sm"
-                                placeholder={`Search ${tableDef.label}...`}
+                                placeholder={t("Search {table}...", { table: t(tableDef.label) })}
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                                 onKeyDown={handleKeyDown}
@@ -335,7 +344,7 @@ function TableViewer({ tableDef, rowCount }) {
                         </div>
 
                         <div className="col-12 col-md-3">
-                            <label className="form-label fw-semibold small mb-1">Date</label>
+                            <label className="form-label fw-semibold small mb-1">{t("Date")}</label>
                             <input
                                 type="date"
                                 className="form-control form-control-sm"
@@ -355,21 +364,21 @@ function TableViewer({ tableDef, rowCount }) {
                                     ? <span className="spinner-border spinner-border-sm me-1" />
                                     : <i className="bi bi-search me-1" />
                                 }
-                                Load
+                                {t("Load")}
                             </button>
                             <button
                                 className="btn btn-outline-secondary btn-sm"
                                 onClick={handleClear}
                                 disabled={loading}
                             >
-                                Clear
+                                {t("Clear")}
                             </button>
                         </div>
 
                         {pagination && (
                             <div className="col-12 col-md-auto ms-auto">
                                 <span className="badge bg-dark fs-6 px-3 py-2">
-                                    {pagination.total.toLocaleString()} rows
+                                    {pagination.total.toLocaleString()} {t("rows")}
                                 </span>
                             </div>
                         )}
@@ -388,7 +397,7 @@ function TableViewer({ tableDef, rowCount }) {
                 rows.length === 0 ? (
                     <div className="text-center py-5 text-muted">
                         <i className="bi bi-inbox fs-1 d-block mb-2" />
-                        No records found
+                        {t("No records found")}
                     </div>
                 ) : (
                     <div className="card border-0 shadow-sm">
@@ -408,7 +417,7 @@ function TableViewer({ tableDef, rowCount }) {
                                                 `}
                                                 style={{ whiteSpace: "nowrap" }}
                                             >
-                                                {col.label}
+                                                {t(col.label)}
                                             </th>
                                         ))}
                                     </tr>
@@ -450,8 +459,10 @@ function TableViewer({ tableDef, rowCount }) {
                     <i className={`bi ${tableDef.icon} fs-1 d-block mb-2 opacity-25`} />
                     <span className="small">
                         {rowCount != null
-                            ? `${rowCount.toLocaleString()} total rows — click Load to browse`
-                            : "Click Load to browse this table"
+                            ? t("{count} total rows — click Load to browse", {
+                                count: rowCount.toLocaleString()
+                            })
+                            : t("Click Load to browse this table")
                         }
                     </span>
                 </div>
@@ -467,6 +478,8 @@ function TableViewer({ tableDef, rowCount }) {
 // ======================================================
 
 function DatabaseRecords() {
+
+    const t = useT();
 
     const [activeTab, setActiveTab] = useState("daily_sales");
     const [stats, setStats]         = useState(null);
@@ -498,9 +511,9 @@ function DatabaseRecords() {
 
             {/* HEADER */}
             <div className="mb-4">
-                <h4 className="fw-bold mb-0">Database Records</h4>
+                <h4 className="fw-bold mb-0">{t("Database Records")}</h4>
                 <p className="text-muted small mb-0">
-                    Raw view of all database tables — search, filter by date, paginate
+                    {t("Raw view of all database tables — search, filter by date, paginate")}
                 </p>
             </div>
 
@@ -521,10 +534,10 @@ function DatabaseRecords() {
                                 <div className="d-flex align-items-center gap-2">
                                     <i className={`bi ${t.icon} text-muted`} />
                                     <div>
-                                        <div className="small text-muted lh-1">{t.label}</div>
+                                        <div className="small text-muted lh-1">{t(t.label)}</div>
                                         <div className="fw-bold fs-6">
                                             {stats ? stats[t.key].toLocaleString() : "—"}
-                                            <span className="text-muted fw-normal small ms-1">rows</span>
+                                            <span className="text-muted fw-normal small ms-1">{t("rows")}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -544,7 +557,7 @@ function DatabaseRecords() {
                             onClick={() => setActiveTab(t.key)}
                         >
                             <i className={`bi ${t.icon} me-1`} />
-                            {t.label}
+                            {t(t.label)}
                             {stats && (
                                 <span className={`ms-1 badge ${activeTab === t.key ? "bg-dark" : "bg-secondary"}`}
                                       style={{ fontSize: "0.7rem" }}>

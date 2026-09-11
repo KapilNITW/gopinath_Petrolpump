@@ -1,3 +1,5 @@
+import { useT } from "../i18n/LanguageContext";
+
 function FuelCard({
     machineNo,
     nozzle,
@@ -13,6 +15,7 @@ function FuelCard({
     onClosingChange,
     onTestingChange
 }) {
+    const t = useT();
     const openingValue = Number(opening) || 0;
     const closingValue = Number(closing) || 0;
     const testingValue = Number(testing) || 0;
@@ -34,11 +37,11 @@ function FuelCard({
 
                     <div>
                         <h5 className="card-title mb-1">
-                            Nozzle {nozzle}
+                            {t("Nozzle {nozzle}", { nozzle })}
                         </h5>
 
                         <small className="text-muted">
-                            Machine {machineNo}
+                            {t("Machine {machineNo}", { machineNo })}
                         </small>
                     </div>
 
@@ -49,7 +52,7 @@ function FuelCard({
                                 : "bg-dark"
                         }`}
                     >
-                        {fuelType}
+                        {fuelType === "PETROL" ? t("Petrol") : t("Diesel")}
                     </span>
 
                 </div>
@@ -59,7 +62,7 @@ function FuelCard({
                 <div className="mb-3">
 
                     <label className="form-label fw-semibold">
-                        Closing Reading
+                        {t("Closing Reading")}
                     </label>
 
                     <input
@@ -71,7 +74,7 @@ function FuelCard({
                                 ? "is-invalid"
                                 : ""
                         }`}
-                        placeholder="Enter closing"
+                        placeholder={t("Enter closing")}
                         value={closing}
                         onChange={(e) =>
                             onClosingChange(
@@ -83,8 +86,7 @@ function FuelCard({
                     {isInvalid &&
                         closingValue < openingValue && (
                             <div className="invalid-feedback">
-                                Closing reading cannot be
-                                less than opening reading.
+                                {t("Closing reading cannot be less than opening reading.")}
                             </div>
                         )}
 
@@ -95,14 +97,14 @@ function FuelCard({
                 <div className="mb-3">
 
                     <label className="form-label fw-semibold">
-                        Opening Reading
+                        {t("Opening Reading")}
                     </label>
 
                     <input
                         type="number"
                         step="0.01"
                         className="form-control"
-                        placeholder="Enter opening"
+                        placeholder={t("Enter opening")}
                         value={opening}
                         onChange={(e) =>
                             onOpeningChange(
@@ -118,7 +120,7 @@ function FuelCard({
                 <div className="mb-3">
 
                     <label className="form-label fw-semibold">
-                        Testing (Litres)
+                        {t("Testing (Litres)")}
                     </label>
 
                     <input
@@ -130,7 +132,7 @@ function FuelCard({
                                 ? "is-invalid"
                                 : ""
                         }`}
-                        placeholder="Enter testing litres"
+                        placeholder={t("Enter testing litres")}
                         value={testing}
                         onChange={(e) =>
                             onTestingChange(
@@ -141,14 +143,12 @@ function FuelCard({
 
                     {testingInvalid && (
                         <div className="invalid-feedback">
-                            Testing litres cannot be greater
-                            than the meter difference.
+                            {t("Testing litres cannot be greater than the meter difference.")}
                         </div>
                     )}
 
                     <small className="text-muted">
-                        Testing fuel will be deducted
-                        from today's sale.
+                        {t("Testing fuel will be deducted from today's sale.")}
                     </small>
 
                 </div>
@@ -161,7 +161,7 @@ function FuelCard({
                 <div className="d-flex justify-content-between mb-2">
 
                     <span className="text-muted">
-                        Meter Difference
+                        {t("Meter Difference")}
                     </span>
 
                     <strong>
@@ -178,7 +178,7 @@ function FuelCard({
                 <div className="d-flex justify-content-between mb-2">
 
                     <span className="text-muted">
-                        Testing
+                        {t("Testing")}
                     </span>
 
                     <strong>
@@ -192,7 +192,7 @@ function FuelCard({
                 <div className="d-flex justify-content-between mb-3">
 
                     <span className="text-muted">
-                        Sale Litres
+                        {t("Sale Litres")}
                     </span>
 
                     <strong className="fs-5">
@@ -206,7 +206,7 @@ function FuelCard({
                 <div className="d-flex justify-content-between mb-2">
 
                     <span className="text-muted">
-                        Price / L
+                        {t("Price / L")}
                     </span>
 
                     <strong>
@@ -220,7 +220,7 @@ function FuelCard({
                 <div className="d-flex justify-content-between">
 
                     <span className="text-muted">
-                        Total Amount
+                        {t("Total Amount")}
                     </span>
 
                     <strong className="fs-5">
