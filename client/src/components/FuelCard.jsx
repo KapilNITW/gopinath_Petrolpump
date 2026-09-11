@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useT } from "../i18n/LanguageContext";
 
 function FuelCard({
@@ -16,6 +17,47 @@ function FuelCard({
     onTestingChange
 }) {
     const t = useT();
+
+    // Stop the browser's "scroll while focused changes the
+    // number" stepping. React's onWheel is attached as a
+    // PASSIVE listener, so preventDefault() inside it is
+    // ignored — a native non-passive listener is required.
+    const cardRef = useRef(null);
+
+    useEffect(() => {
+
+        const card = cardRef.current;
+
+        if (!card) {
+            return;
+        }
+
+        const inputs =
+            card.querySelectorAll(
+                'input[type="number"]'
+            );
+
+        const handler = (e) =>
+            e.preventDefault();
+
+        inputs.forEach((el) =>
+            el.addEventListener(
+                "wheel",
+                handler,
+                { passive: false }
+            )
+        );
+
+        return () =>
+            inputs.forEach((el) =>
+                el.removeEventListener(
+                    "wheel",
+                    handler
+                )
+            );
+
+    }, []);
+
     const openingValue = Number(opening) || 0;
     const closingValue = Number(closing) || 0;
     const testingValue = Number(testing) || 0;
@@ -28,7 +70,7 @@ function FuelCard({
         testingValue > meterDifference;
 
     return (
-        <div className="card shadow-sm h-100">
+        <div ref={cardRef} className="card shadow-sm h-100">
 
             <div className="card-body">
 

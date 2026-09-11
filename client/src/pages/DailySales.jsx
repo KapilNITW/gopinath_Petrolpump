@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useT } from "../i18n/LanguageContext";
 import FuelCard from "../components/FuelCard";
 
 import {
     saveDaySales,
-    getSalesByDate
+    getSalesByDate,
+    getPreviousOpenings
 } from "../services/salesService";
 
 
@@ -176,6 +177,46 @@ function DailySales() {
         useState("");
 
 
+    // Stop scroll-to-step on the two fuel price number inputs.
+    // React's onWheel is a passive listener, so preventDefault()
+    // there is ignored — a native non-passive listener is required.
+    const priceRowRef = useRef(null);
+
+    useEffect(() => {
+
+        const row = priceRowRef.current;
+
+        if (!row) {
+            return;
+        }
+
+        const inputs =
+            row.querySelectorAll(
+                'input[type="number"]'
+            );
+
+        const handler = (e) =>
+            e.preventDefault();
+
+        inputs.forEach((el) =>
+            el.addEventListener(
+                "wheel",
+                handler,
+                { passive: false }
+            )
+        );
+
+        return () =>
+            inputs.forEach((el) =>
+                el.removeEventListener(
+                    "wheel",
+                    handler
+                )
+            );
+
+    }, []);
+
+
     // ==================================================
     // RESET SALES
     // ==================================================
@@ -190,6 +231,65 @@ function DailySales() {
                 testing: ""
             }))
         );
+
+    };
+
+
+    // ==================================================
+    // AUTO-FILL OPENING FROM PREVIOUS DAY'S CLOSING
+    // ==================================================
+
+    const applyPreviousOpenings = async (date) => {
+
+        try {
+
+            const prev =
+                await getPreviousOpenings(
+                    date
+                );
+
+            const openings =
+                prev?.openings || {};
+
+
+            setSales(
+                (prevSales) =>
+                    prevSales.map(
+                        (sale) => ({
+                            ...sale,
+
+                            // Keep as string to match the
+                            // input field formatting; the
+                            // field stays fully editable.
+
+                            opening:
+                                openings[
+                                    sale.nozzle
+                                ] !== undefined
+                                    ? String(
+                                        openings[
+                                            sale.nozzle
+                                        ]
+                                      )
+                                    : "",
+
+                            closing: "",
+
+                            testing: ""
+                        })
+                    )
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Failed to fetch previous openings:",
+                error
+            );
+
+            resetSales();
+
+        }
 
     };
 
@@ -231,6 +331,8 @@ function DailySales() {
             resetSales();
             setPetrolPrice("");
             setDieselPrice("");
+
+            await applyPreviousOpenings(newDate);
 
         } catch (error) {
 
@@ -285,6 +387,8 @@ function DailySales() {
             resetSales();
             setPetrolPrice("");
             setDieselPrice("");
+
+            await applyPreviousOpenings(pendingDate);
 
         } catch (error) {
 
@@ -345,7 +449,9 @@ function DailySales() {
 
                 if (records.length === 0) {
 
-                    resetSales();
+                    await applyPreviousOpenings(
+                        selectedDate
+                    );
 
                     return;
                 }
@@ -846,7 +952,7 @@ function DailySales() {
                 FUEL PRICES
             ========================================= */}
 
-            <div className="row g-3 mb-4">
+            <div ref={priceRowRef} className="row g-3 mb-4">
 
                 {/* PETROL */}
 

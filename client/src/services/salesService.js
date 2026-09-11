@@ -89,3 +89,29 @@ export async function getSalesByDate(saleDate) {
 
     return result;
 }
+
+
+// ======================================================
+// GET PREVIOUS DAY'S CLOSING (opening suggestions)
+// ======================================================
+
+export async function getPreviousOpenings(saleDate) {
+
+    const response = await fetch(
+        `${API_URL}/previous-openings/${saleDate}`
+    );
+
+
+    const result = await response.json();
+
+
+    if (!response.ok) {
+        throw new Error(
+            result.message ||
+            "Failed to fetch previous openings"
+        );
+    }
+
+
+    return result;
+}

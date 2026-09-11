@@ -49,6 +49,88 @@ router.get("/today", (req, res) => {
 
 
 // ======================================================
+// GET LAST CLOSING READINGS BEFORE A DATE
+// (used to auto-fill next day's opening readings)
+// ======================================================
+
+router.get("/previous-openings/:saleDate", (req, res) => {
+
+    try {
+
+        const { saleDate } = req.params;
+
+
+        if (!saleDate) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Sale date is required"
+            });
+
+        }
+
+
+        // Most recent recorded date strictly BEFORE the
+        // requested date (string compare works because
+        // sale_date is stored as YYYY-MM-DD).
+
+        const prev = db.prepare(`
+            SELECT MAX(sale_date) AS d
+            FROM daily_sales
+            WHERE sale_date < ?
+        `).get(saleDate);
+
+
+        if (!prev?.d) {
+
+            return res.json({
+                success: true,
+                previousDate: null,
+                openings: {}
+            });
+
+        }
+
+
+        // Closing reading of every nozzle on that day
+
+        const rows = db.prepare(`
+            SELECT nozzle, closing_reading
+            FROM daily_sales
+            WHERE sale_date = ?
+        `).all(prev.d);
+
+
+        const openings = {};
+
+        for (const row of rows) {
+            openings[row.nozzle] = row.closing_reading;
+        }
+
+
+        res.json({
+            success: true,
+            previousDate: prev.d,
+            openings
+        });
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch previous openings"
+        });
+
+    }
+
+});
+
+
+// ======================================================
 // GET SALES BY DATE
 // ======================================================
 

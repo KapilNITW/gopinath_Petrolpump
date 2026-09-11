@@ -499,7 +499,7 @@ function DatabaseRecords() {
     }, []);
 
 
-    const activeTable = TABLES.find(t => t.key === activeTab);
+    const activeTable = TABLES.find(tbl => tbl.key === activeTab);
 
 
     // --------------------------------------------------
@@ -520,23 +520,23 @@ function DatabaseRecords() {
 
             {/* STAT CARDS */}
             <div className="row g-2 mb-4">
-                {TABLES.map(t => (
-                    <div key={t.key} className="col-6 col-md">
+                {TABLES.map(tbl => (
+                    <div key={tbl.key} className="col-6 col-md">
                         <button
-                            className={`card border-0 w-100 text-start shadow-sm ${activeTab === t.key ? "border-dark border-2" : ""}`}
+                            className={`card border-0 w-100 text-start shadow-sm ${activeTab === tbl.key ? "border-dark border-2" : ""}`}
                             style={{
                                 cursor: "pointer",
-                                outline: activeTab === t.key ? "2px solid #212529" : "none"
+                                outline: activeTab === tbl.key ? "2px solid #212529" : "none"
                             }}
-                            onClick={() => setActiveTab(t.key)}
+                            onClick={() => setActiveTab(tbl.key)}
                         >
                             <div className="card-body py-2 px-3">
                                 <div className="d-flex align-items-center gap-2">
-                                    <i className={`bi ${t.icon} text-muted`} />
+                                    <i className={`bi ${tbl.icon} text-muted`} />
                                     <div>
-                                        <div className="small text-muted lh-1">{t(t.label)}</div>
+                                        <div className="small text-muted lh-1">{t(tbl.label)}</div>
                                         <div className="fw-bold fs-6">
-                                            {stats ? stats[t.key].toLocaleString() : "—"}
+                                            {stats ? stats[tbl.key].toLocaleString() : "—"}
                                             <span className="text-muted fw-normal small ms-1">{t("rows")}</span>
                                         </div>
                                     </div>
@@ -550,18 +550,18 @@ function DatabaseRecords() {
 
             {/* TABS */}
             <ul className="nav nav-tabs mb-3">
-                {TABLES.map(t => (
-                    <li key={t.key} className="nav-item">
+                {TABLES.map(tbl => (
+                    <li key={tbl.key} className="nav-item">
                         <button
-                            className={`nav-link ${activeTab === t.key ? "active fw-semibold" : ""}`}
-                            onClick={() => setActiveTab(t.key)}
+                            className={`nav-link ${activeTab === tbl.key ? "active fw-semibold" : ""}`}
+                            onClick={() => setActiveTab(tbl.key)}
                         >
-                            <i className={`bi ${t.icon} me-1`} />
-                            {t(t.label)}
+                            <i className={`bi ${tbl.icon} me-1`} />
+                            {t(tbl.label)}
                             {stats && (
-                                <span className={`ms-1 badge ${activeTab === t.key ? "bg-dark" : "bg-secondary"}`}
+                                <span className={`ms-1 badge ${activeTab === tbl.key ? "bg-dark" : "bg-secondary"}`}
                                       style={{ fontSize: "0.7rem" }}>
-                                    {stats[t.key].toLocaleString()}
+                                    {stats[tbl.key].toLocaleString()}
                                 </span>
                             )}
                         </button>
