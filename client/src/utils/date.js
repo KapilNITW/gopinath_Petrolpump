@@ -25,3 +25,40 @@ export function getLocalDate() {
 
     return `${year}-${month}-${day}`;
 }
+
+
+// "2026-09-12" -> "12 Sep 2026"  (used by Ledger, the
+// settlement records and database tables). Local-time
+// constructed (not UTC) so the day never shifts.
+export function formatPrettyDate(str) {
+
+    if (!str) return "-";
+
+    const [y, m, d] = str.split("-");
+
+    return new Date(
+        Number(y),
+        Number(m) - 1,
+        Number(d)
+    ).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
+}
+
+
+// "2026-09-12" -> "12/9/2026"  (plain en-IN short date,
+// matching the Daily Sales / Udhari pages).
+export function formatDayDate(str) {
+
+    if (!str) return "-";
+
+    const [y, m, d] = str.split("-");
+
+    return new Date(
+        Number(y),
+        Number(m) - 1,
+        Number(d)
+    ).toLocaleDateString("en-IN");
+}

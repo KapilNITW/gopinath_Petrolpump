@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useT } from "../i18n/LanguageContext";
 import FuelCard from "../components/FuelCard";
 
@@ -7,45 +7,18 @@ import {
     getSalesByDate,
     getPreviousOpenings
 } from "../services/salesService";
+import { apiFetch } from "../services/api";
+import { getLocalDate, formatDayDate } from "../utils/date";
 
 
 // ======================================================
 // HELPERS
 // ======================================================
 
-function getLocalDate() {
-
-    const date = new Date();
-
-    const year = date.getFullYear();
-
-    const month = String(
-        date.getMonth() + 1
-    ).padStart(2, "0");
-
-    const day = String(
-        date.getDate()
-    ).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
-}
-
-
-function formatDisplayDate(dateString) {
-
-    if (!dateString) {
-        return "";
-    }
-
-    const [year, month, day] =
-        dateString.split("-");
-
-    return new Date(
-        Number(year),
-        Number(month) - 1,
-        Number(day)
-    ).toLocaleDateString("en-IN");
-}
+// The page always has a selected/pending date, but preserve
+// the old "empty string" behavior for a falsy input exactly.
+const formatDisplayDate = (dateString) =>
+    dateString ? formatDayDate(dateString) : "";
 
 
 // ======================================================
@@ -308,8 +281,8 @@ function DailySales() {
 
             setLoading(true);
 
-            const response = await fetch(
-                `http://localhost:5000/api/sales/check-date/${newDate}`
+            const response = await apiFetch(
+                `/sales/check-date/${newDate}`
             );
 
             const result = await response.json();
@@ -367,8 +340,8 @@ function DailySales() {
 
             setLoading(true);
 
-            const response = await fetch(
-                `http://localhost:5000/api/sales/date/${pendingDate}`,
+            const response = await apiFetch(
+                `/sales/date/${pendingDate}`,
                 { method: "DELETE" }
             );
 
@@ -595,9 +568,11 @@ function DailySales() {
 
     // ==================================================
     // UPDATE READING
+    // (stable reference so React.memo'd FuelCards can skip
+    //  re-renders — only the edited nozzle's props change)
     // ==================================================
 
-    const updateReading = (
+    const updateReading = useCallback((
         id,
         field,
         value
@@ -616,14 +591,20 @@ function DailySales() {
                 )
         );
 
-    };
+    }, []);
 
 
     // ==================================================
     // CALCULATE ONE NOZZLE
+    // (pure — prices are passed in, so the result only
+    //  depends on the sale + prices, not on render scope)
     // ==================================================
 
-    const calculateSale = (sale) => {
+    const calculateSale = useCallback((
+        sale,
+        petrol,
+        diesel
+    ) => {
 
         const opening =
             Number(sale.opening) || 0;
@@ -672,8 +653,8 @@ function DailySales() {
 
         const price =
             sale.fuelType === "PETROL"
-                ? Number(petrolPrice) || 0
-                : Number(dieselPrice) || 0;
+                ? Number(petrol) || 0
+                : Number(diesel) || 0;
 
 
         const totalAmount =
@@ -690,80 +671,80 @@ function DailySales() {
             testingInvalid
         };
 
-    };
+    }, []);
 
 
     // ==================================================
-    // GRAND TOTAL
+    // DERIVED VALUES (single pass)
+    // Per-nozzle calculations + grand total + fuel
+    // breakdown, computed once per render and re-run only
+    // when the sales array or the fuel prices change.
     // ==================================================
 
-    const grandTotal =
-        sales.reduce(
-            (total, sale) => {
+    const {
+        calcById,
+        grandTotal,
+        fuelBreakdown
+    } = useMemo(() => {
 
-                const calculated =
-                    calculateSale(sale);
+        const byId = new Map();
 
+        let litres = 0;
+        let amount = 0;
 
-                total.litres +=
+        const fuel = {
+            petrolLitres: 0,
+            petrolAmount: 0,
+            dieselLitres: 0,
+            dieselAmount: 0
+        };
+
+        for (const sale of sales) {
+
+            const calculated =
+                calculateSale(
+                    sale,
+                    petrolPrice,
+                    dieselPrice
+                );
+
+            byId.set(sale.id, calculated);
+
+            litres += calculated.totalLitres;
+            amount += calculated.totalAmount;
+
+            if (sale.fuelType === "PETROL") {
+
+                fuel.petrolLitres +=
                     calculated.totalLitres;
 
-
-                total.amount +=
+                fuel.petrolAmount +=
                     calculated.totalAmount;
 
+            } else {
 
-                return total;
+                fuel.dieselLitres +=
+                    calculated.totalLitres;
 
-            },
-            {
-                litres: 0,
-                amount: 0
+                fuel.dieselAmount +=
+                    calculated.totalAmount;
+
             }
-        );
 
+        }
 
-    // ==================================================
-    // PETROL / DIESEL BREAKDOWN
-    // ==================================================
+        return {
+            calcById: byId,
+            grandTotal: { litres, amount },
+            fuelBreakdown: fuel
+        };
 
-    const fuelBreakdown =
-        sales.reduce(
-            (acc, sale) => {
-
-                const calculated =
-                    calculateSale(sale);
-
-
-                if (sale.fuelType === "PETROL") {
-
-                    acc.petrolLitres +=
-                        calculated.totalLitres;
-
-                    acc.petrolAmount +=
-                        calculated.totalAmount;
-
-                } else {
-
-                    acc.dieselLitres +=
-                        calculated.totalLitres;
-
-                    acc.dieselAmount +=
-                        calculated.totalAmount;
-
-                }
-
-
-                return acc;
-
-            },
-            {
-                petrolLitres: 0,
-                petrolAmount: 0,
-                dieselLitres: 0,
-                dieselAmount: 0
-            }
-        );
+    }, [
+        sales,
+        petrolPrice,
+        dieselPrice,
+        calculateSale
+    ]);
 
 
     // ==================================================
@@ -791,7 +772,11 @@ function DailySales() {
                 sales.some((sale) => {
 
                     const calculated =
-                        calculateSale(sale);
+                        calculateSale(
+                            sale,
+                            petrolPrice,
+                            dieselPrice
+                        );
 
                     return (
                         calculated.isInvalid ||
@@ -816,7 +801,11 @@ function DailySales() {
                 sales.map((sale) => {
 
                     const calculated =
-                        calculateSale(sale);
+                        calculateSale(
+                            sale,
+                            petrolPrice,
+                            dieselPrice
+                        );
 
 
                     return {
@@ -1047,7 +1036,7 @@ function DailySales() {
                         .map((sale) => {
 
                             const calculated =
-                                calculateSale(sale);
+                                calcById.get(sale.id);
 
 
                             return (
@@ -1107,31 +1096,12 @@ function DailySales() {
                                             calculated.testingInvalid
                                         }
 
-                                        onOpeningChange={
-                                            (value) =>
-                                                updateReading(
-                                                    sale.id,
-                                                    "opening",
-                                                    value
-                                                )
+                                        id={
+                                            sale.id
                                         }
 
-                                        onClosingChange={
-                                            (value) =>
-                                                updateReading(
-                                                    sale.id,
-                                                    "closing",
-                                                    value
-                                                )
-                                        }
-
-                                        onTestingChange={
-                                            (value) =>
-                                                updateReading(
-                                                    sale.id,
-                                                    "testing",
-                                                    value
-                                                )
+                                        onChange={
+                                            updateReading
                                         }
 
                                     />
@@ -1172,7 +1142,7 @@ function DailySales() {
                         .map((sale) => {
 
                             const calculated =
-                                calculateSale(sale);
+                                calcById.get(sale.id);
 
 
                             return (
@@ -1232,31 +1202,12 @@ function DailySales() {
                                             calculated.testingInvalid
                                         }
 
-                                        onOpeningChange={
-                                            (value) =>
-                                                updateReading(
-                                                    sale.id,
-                                                    "opening",
-                                                    value
-                                                )
+                                        id={
+                                            sale.id
                                         }
 
-                                        onClosingChange={
-                                            (value) =>
-                                                updateReading(
-                                                    sale.id,
-                                                    "closing",
-                                                    value
-                                                )
-                                        }
-
-                                        onTestingChange={
-                                            (value) =>
-                                                updateReading(
-                                                    sale.id,
-                                                    "testing",
-                                                    value
-                                                )
+                                        onChange={
+                                            updateReading
                                         }
 
                                     />

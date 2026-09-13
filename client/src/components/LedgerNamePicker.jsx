@@ -1,9 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useT } from "../i18n/LanguageContext";
+import { apiFetch } from "../services/api";
 
-
-const API_URL = "http://localhost:5000/api";
 
 const MENU_MAX = 260;
 
@@ -204,8 +203,8 @@ function LedgerNamePicker({
 
             try {
 
-                const res = await fetch(
-                    `${API_URL}/ledger/customers?search=${encodeURIComponent(query)}`
+                const res = await apiFetch(
+                    `/ledger/customers?search=${encodeURIComponent(query)}`
                 );
 
                 const result = await res.json();

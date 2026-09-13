@@ -2,6 +2,7 @@ import { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { useT } from "../i18n/LanguageContext";
+import { apiFetch } from "../services/api";
 
 
 // ======================================================
@@ -11,7 +12,7 @@ import { useT } from "../i18n/LanguageContext";
 
 function AdminRequests() {
 
-    const { user, token } = useContext(AuthContext);
+    const { user } = useContext(AuthContext);
     const t = useT();
     const navigate = useNavigate();
 
@@ -38,15 +39,8 @@ function AdminRequests() {
 
         try {
 
-            const response = await fetch(
-                `${"http://localhost:5000"}/api/auth/admin/requests`,
-                {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    }
-                }
+            const response = await apiFetch(
+                `/auth/admin/requests`
             );
 
             const result = await response.json();
@@ -57,7 +51,7 @@ function AdminRequests() {
                 setError(t(result.message) || t("Failed to fetch requests"));
             }
 
-        } catch (err) {
+        } catch {
 
             setError(t("Failed to fetch requests"));
 
@@ -82,12 +76,7 @@ function AdminRequests() {
 
     // Check Google Drive connection status once on load
     useEffect(() => {
-        fetch(`${"http://localhost:5000"}/api/drive/status`, {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        })
+        apiFetch("/drive/status")
             .then((res) => res.json())
             .then((result) => {
                 setDriveConnected(
@@ -98,7 +87,6 @@ function AdminRequests() {
                 setDriveConnected(false);
             })
             .finally(() => setStatusChecked(true));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleApprove = async (id) => {
@@ -109,15 +97,9 @@ function AdminRequests() {
 
         try {
 
-            const response = await fetch(
-                `${"http://localhost:5000"}/api/auth/admin/approve/${id}`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    }
-                }
+            const response = await apiFetch(
+                `/auth/admin/approve/${id}`,
+                { method: "POST" }
             );
 
             const result = await response.json();
@@ -128,7 +110,7 @@ function AdminRequests() {
                 setError(t(result.message) || t("Failed to approve"));
             }
 
-        } catch (err) {
+        } catch {
 
             setError(t("Failed to approve request"));
 
@@ -144,15 +126,9 @@ function AdminRequests() {
 
         try {
 
-            const response = await fetch(
-                `${"http://localhost:5000"}/api/auth/admin/reject/${id}`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    }
-                }
+            const response = await apiFetch(
+                `/auth/admin/reject/${id}`,
+                { method: "POST" }
             );
 
             const result = await response.json();
@@ -163,7 +139,7 @@ function AdminRequests() {
                 setError(t(result.message) || t("Failed to reject"));
             }
 
-        } catch (err) {
+        } catch {
 
             setError(t("Failed to reject request"));
 
@@ -179,14 +155,8 @@ function AdminRequests() {
 
         try {
 
-            const response = await fetch(
-                `${"http://localhost:5000"}/api/drive/auth-url`,
-                {
-                    method: "GET",
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
-                }
+            const response = await apiFetch(
+                `/drive/auth-url`
             );
 
             const result = await response.json();
@@ -200,7 +170,7 @@ function AdminRequests() {
                 );
             }
 
-        } catch (err) {
+        } catch {
 
             setDriveErr(t("Failed to get connect URL"));
 
@@ -224,17 +194,11 @@ function AdminRequests() {
 
         try {
 
-            const response = await fetch(
-                `${"http://localhost:5000"}/api/drive/auth-code`,
+            const response = await apiFetch(
+                `/drive/auth-code`,
                 {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        code: authCode.trim()
-                    })
+                    body: { code: authCode.trim() }
                 }
             );
 
@@ -252,7 +216,7 @@ function AdminRequests() {
                 );
             }
 
-        } catch (err) {
+        } catch {
 
             setDriveErr(t("Failed to connect"));
 
@@ -272,15 +236,9 @@ function AdminRequests() {
 
         try {
 
-            const response = await fetch(
-                `${"http://localhost:5000"}/api/drive/upload`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    }
-                }
+            const response = await apiFetch(
+                `/drive/upload`,
+                { method: "POST" }
             );
 
             const result = await response.json();
@@ -294,7 +252,7 @@ function AdminRequests() {
                 );
             }
 
-        } catch (err) {
+        } catch {
 
             setDriveErr(t("Upload to Drive failed"));
 
@@ -322,15 +280,9 @@ function AdminRequests() {
 
         try {
 
-            const response = await fetch(
-                `${"http://localhost:5000"}/api/drive/download`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    }
-                }
+            const response = await apiFetch(
+                `/drive/download`,
+                { method: "POST" }
             );
 
             const result = await response.json();
@@ -346,7 +298,7 @@ function AdminRequests() {
                 );
             }
 
-        } catch (err) {
+        } catch {
 
             setDriveErr(t("Download & restore failed"));
 
@@ -374,15 +326,9 @@ function AdminRequests() {
 
         try {
 
-            const response = await fetch(
-                `${"http://localhost:5000"}/api/safety-backups/delete-all`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    }
-                }
+            const response = await apiFetch(
+                `/safety-backups/delete-all`,
+                { method: "POST" }
             );
 
             const result = await response.json();
@@ -400,7 +346,7 @@ function AdminRequests() {
                 );
             }
 
-        } catch (err) {
+        } catch {
             setDriveErr(t("Failed to delete backups"));
         } finally {
             setDeletingBackups(false);
@@ -422,17 +368,11 @@ function AdminRequests() {
 
         try {
 
-            const response = await fetch(
-                `${"http://localhost:5000"}/api/auth/admin/delete-user`,
+            const response = await apiFetch(
+                `/auth/admin/delete-user`,
                 {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        username: req.username
-                    })
+                    body: { username: req.username }
                 }
             );
 
@@ -444,7 +384,7 @@ function AdminRequests() {
                 setError(t(result.message) || t("Failed to delete user"));
             }
 
-        } catch (err) {
+        } catch {
 
             setError(t("Failed to delete user"));
 

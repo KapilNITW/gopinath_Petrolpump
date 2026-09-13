@@ -842,7 +842,14 @@ router.delete("/sale/:id", (req, res) => {
 
     try {
 
-        const { id } = req.params;
+        const id = Number(req.params.id);
+
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid ID"
+            });
+        }
 
 
         const result = db.prepare(`

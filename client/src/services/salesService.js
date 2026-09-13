@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/api/sales";
+import { apiFetch } from "./api";
 
 
 // ======================================================
@@ -7,19 +7,11 @@ const API_URL = "http://localhost:5000/api/sales";
 
 export async function saveDaySales(saleDate, sales) {
 
-    const response = await fetch(
-        `${API_URL}/save-day`,
+    const response = await apiFetch(
+        "/sales/save-day",
         {
             method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                saleDate,
-                sales
-            })
+            body: { saleDate, sales }
         }
     );
 
@@ -45,9 +37,7 @@ export async function saveDaySales(saleDate, sales) {
 
 export async function getTodaySales() {
 
-    const response = await fetch(
-        `${API_URL}/today`
-    );
+    const response = await apiFetch("/sales/today");
 
 
     const result = await response.json();
@@ -71,8 +61,8 @@ export async function getTodaySales() {
 
 export async function getSalesByDate(saleDate) {
 
-    const response = await fetch(
-        `${API_URL}/date/${saleDate}`
+    const response = await apiFetch(
+        `/sales/date/${saleDate}`
     );
 
 
@@ -97,8 +87,8 @@ export async function getSalesByDate(saleDate) {
 
 export async function getPreviousOpenings(saleDate) {
 
-    const response = await fetch(
-        `${API_URL}/previous-openings/${saleDate}`
+    const response = await apiFetch(
+        `/sales/previous-openings/${saleDate}`
     );
 
 

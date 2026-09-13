@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import { useT } from "../i18n/LanguageContext";
 
 function FuelCard({
+    id,
     machineNo,
     nozzle,
     fuelType,
@@ -12,9 +13,7 @@ function FuelCard({
     fuelPrice,
     totalAmount,
     isInvalid,
-    onOpeningChange,
-    onClosingChange,
-    onTestingChange
+    onChange
 }) {
     const t = useT();
 
@@ -119,7 +118,9 @@ function FuelCard({
                         placeholder={t("Enter closing")}
                         value={closing}
                         onChange={(e) =>
-                            onClosingChange(
+                            onChange(
+                                id,
+                                "closing",
                                 e.target.value
                             )
                         }
@@ -149,7 +150,9 @@ function FuelCard({
                         placeholder={t("Enter opening")}
                         value={opening}
                         onChange={(e) =>
-                            onOpeningChange(
+                            onChange(
+                                id,
+                                "opening",
                                 e.target.value
                             )
                         }
@@ -177,7 +180,9 @@ function FuelCard({
                         placeholder={t("Enter testing litres")}
                         value={testing}
                         onChange={(e) =>
-                            onTestingChange(
+                            onChange(
+                                id,
+                                "testing",
                                 e.target.value
                             )
                         }
@@ -277,4 +282,6 @@ function FuelCard({
     );
 }
 
-export default FuelCard;
+// Memoized so that when one nozzle's readings change, the
+// other 7 FuelCards (whose props are unchanged) skip re-render.
+export default memo(FuelCard);

@@ -1,34 +1,16 @@
 import { useState, useCallback } from "react";
 import { useT } from "../i18n/LanguageContext";
-
-
-const API_URL = "http://localhost:5000/api";
+import { apiFetch } from "../services/api";
+import { formatPrettyDate } from "../utils/date";
+import { formatMoney } from "../utils/format";
 
 
 // ======================================================
-// HELPERS
+// HELPERS (shared formatters from utils)
 // ======================================================
 
-function formatDate(dateString) {
-    if (!dateString) return "-";
-    const [year, month, day] = dateString.split("-");
-    return new Date(
-        Number(year),
-        Number(month) - 1,
-        Number(day)
-    ).toLocaleDateString("en-IN", {
-        day:   "2-digit",
-        month: "short",
-        year:  "numeric"
-    });
-}
-
-function fmt(amount) {
-    return Number(amount || 0).toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-}
+const formatDate = formatPrettyDate;
+const fmt = formatMoney;
 
 // First day of current month
 function monthStart() {
@@ -191,7 +173,7 @@ function DailySettlementRecords() {
             if (fromDate) params.set("from", fromDate);
             if (toDate)   params.set("to",   toDate);
 
-            const res    = await fetch(`${API_URL}/settlement/records?${params}`);
+            const res    = await apiFetch(`/settlement/records?${params}`);
             const result = await res.json();
 
             if (!res.ok) {

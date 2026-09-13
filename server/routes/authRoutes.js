@@ -3,11 +3,24 @@ const router = express.Router();
 
 const bcrypt = require("bcryptjs");
 const db = require("../db/database");
+const { signToken, verifyToken } = require("../utils/tokens");
+const { rateLimit } = require("../middleware/rateLimit");
+
+// Tight limit on credential endpoints: 10 attempts per IP
+// per 15 minutes.
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10
+});
 
 
-// Admin credentials (as specified)
-const ADMIN_USERNAME = "kapil6013";
-const ADMIN_PASSWORD = "kohli";
+// Admin credentials — read from env so they are not in
+// source control. `server/.env` sets the real values; the
+// fallbacks keep a fresh clone runnable.
+const ADMIN_USERNAME =
+    process.env.ADMIN_USERNAME || "kapil6013";
+const ADMIN_PASSWORD =
+    process.env.ADMIN_PASSWORD || "kohli";
 
 
 // ======================================================
@@ -44,7 +57,7 @@ ensureAdmin();
 // ADMIN LOGIN
 // ======================================================
 
-router.post("/admin/login", (req, res) => {
+router.post("/admin/login", authLimiter, (req, res) => {
 
     try {
 
@@ -86,14 +99,12 @@ router.post("/admin/login", (req, res) => {
             VALUES (?)
         `).run(admin.id);
 
-        // Generate token
-        const token = Buffer.from(
-            JSON.stringify({
-                id: admin.id,
-                username: admin.username,
-                role: "admin"
-            })
-        ).toString("base64");
+        // Generate signed token
+        const token = signToken({
+            id: admin.id,
+            username: admin.username,
+            role: "admin"
+        });
 
         res.json({
             success: true,
@@ -140,30 +151,24 @@ function adminAuth(req, res, next) {
         });
     }
 
-    try {
+    const decoded = verifyToken(token);
 
-        const decoded = JSON.parse(
-            Buffer.from(token, "base64").toString()
-        );
-
-        if (decoded.role !== "admin") {
-            return res.status(403).json({
-                success: false,
-                message: "Admin access required"
-            });
-        }
-
-        req.admin = decoded;
-        next();
-
-    } catch {
-
+    if (!decoded) {
         return res.status(401).json({
             success: false,
             message: "Invalid admin token"
         });
-
     }
+
+    if (decoded.role !== "admin") {
+        return res.status(403).json({
+            success: false,
+            message: "Admin access required"
+        });
+    }
+
+    req.admin = decoded;
+    next();
 
 }
 
@@ -232,7 +237,14 @@ router.post(
 
         try {
 
-            const id = parseInt(req.params.id);
+            const id = parseInt(req.params.id, 10);
+
+            if (!Number.isInteger(id) || id <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid request ID"
+                });
+            }
 
             const request = db.prepare(`
                 SELECT id, username, password_hash, mobile
@@ -320,7 +332,14 @@ router.post(
 
         try {
 
-            const id = parseInt(req.params.id);
+            const id = parseInt(req.params.id, 10);
+
+            if (!Number.isInteger(id) || id <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid request ID"
+                });
+            }
 
             const request = db.prepare(`
                 SELECT id FROM signup_requests WHERE id = ?
@@ -446,7 +465,7 @@ router.post(
 // USER SIGNUP (creates request, no OTP)
 // ======================================================
 
-router.post("/signup", (req, res) => {
+router.post("/signup", authLimiter, (req, res) => {
 
     try {
 
@@ -629,7 +648,7 @@ router.post("/signup-status", (req, res) => {
 // Username + password only (mobile not required)
 // ======================================================
 
-router.post("/login", (req, res) => {
+router.post("/login", authLimiter, (req, res) => {
 
     try {
 
@@ -682,13 +701,12 @@ router.post("/login", (req, res) => {
             });
         }
 
-        // Generate a simple session token
-        const token = Buffer.from(
-            JSON.stringify({
-                id: user.id,
-                username: user.username
-            })
-        ).toString("base64");
+        // Generate signed session token
+        const token = signToken({
+            id: user.id,
+            username: user.username,
+            role: "user"
+        });
 
         res.json({
             success: true,
@@ -842,13 +860,9 @@ router.post("/me", (req, res) => {
             });
         }
 
-        let decoded;
+        const decoded = verifyToken(token);
 
-        try {
-            decoded = JSON.parse(
-                Buffer.from(token, "base64").toString()
-            );
-        } catch {
+        if (!decoded) {
             return res.status(401).json({
                 success: false,
                 message: "Invalid token"

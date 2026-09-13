@@ -3,6 +3,200 @@ import { useT } from "../i18n/LanguageContext";
 
 
 // ======================================================
+// SAFE EXPRESSION EVALUATOR
+//
+// Replaces the old `Function("return (...)" )()` call:
+// no eval / Function constructor means there is no code
+// execution vector no matter what ends up in the string.
+// A tiny recursive-descent parser handles:
+//   numbers, decimals, + - * /, parentheses, unary sign.
+// Division by zero yields Infinity/NaN exactly like the
+// old `Function` version did (the `format()` helper below
+// decides how those render).
+// ======================================================
+
+function safeEvaluate(expression) {
+
+    const tokens = tokenize(expression);
+
+    let index = 0;
+
+    const peek = () => tokens[index];
+    const consume = () => tokens[index++];
+
+    function parseFactor() {
+
+        const token = peek();
+
+        if (!token) {
+            throw new Error("Unexpected end");
+        }
+
+        // Unary sign:  "-3", "-(-3)", "5 * -2"
+        if (
+            token.type === "op" &&
+            (token.value === "-" || token.value === "+")
+        ) {
+            consume();
+            const value = parseFactor();
+            return token.value === "-" ? -value : value;
+        }
+
+        if (token.type === "num") {
+            consume();
+            return token.value;
+        }
+
+        if (
+            token.type === "paren" &&
+            token.value === "("
+        ) {
+            consume();
+            const value = parseExpression();
+
+            const close = peek();
+
+            if (
+                !close ||
+                close.type !== "paren" ||
+                close.value !== ")"
+            ) {
+                throw new Error("Missing )");
+            }
+
+            consume();
+            return value;
+        }
+
+        throw new Error("Unexpected token");
+    }
+
+    function parseTerm() {
+
+        let value = parseFactor();
+
+        while (true) {
+
+            const token = peek();
+
+            if (
+                token &&
+                token.type === "op" &&
+                (token.value === "*" || token.value === "/")
+            ) {
+                consume();
+                const rhs = parseFactor();
+                value =
+                    token.value === "*"
+                        ? value * rhs
+                        : value / rhs;
+            } else {
+                break;
+            }
+        }
+
+        return value;
+    }
+
+    function parseExpression() {
+
+        let value = parseTerm();
+
+        while (true) {
+
+            const token = peek();
+
+            if (
+                token &&
+                token.type === "op" &&
+                (token.value === "+" || token.value === "-")
+            ) {
+                consume();
+                const rhs = parseTerm();
+                value =
+                    token.value === "+"
+                        ? value + rhs
+                        : value - rhs;
+            } else {
+                break;
+            }
+        }
+
+        return value;
+    }
+
+    const result = parseExpression();
+
+    if (index !== tokens.length) {
+        throw new Error("Trailing tokens");
+    }
+
+    return result;
+}
+
+
+function tokenize(source) {
+
+    const tokens = [];
+
+    let i = 0;
+
+    while (i < source.length) {
+
+        const char = source[i];
+
+        if (char === " ") {
+            i += 1;
+            continue;
+        }
+
+        // Number (digits with an optional decimal point)
+        if (/[0-9.]/.test(char)) {
+
+            let num = "";
+
+            while (
+                i < source.length &&
+                /[0-9.]/.test(source[i])
+            ) {
+                num += source[i];
+                i += 1;
+            }
+
+            // Reject "1.2.3", just ".", just "1." etc.
+            if (!/^(\d+(\.\d*)?|\.\d+)$/.test(num)) {
+                throw new Error("Invalid number");
+            }
+
+            tokens.push({
+                type: "num",
+                value: parseFloat(num)
+            });
+
+            continue;
+        }
+
+        if (char === "+" || char === "-" ||
+            char === "*" || char === "/") {
+            tokens.push({ type: "op", value: char });
+            i += 1;
+            continue;
+        }
+
+        if (char === "(" || char === ")") {
+            tokens.push({ type: "paren", value: char });
+            i += 1;
+            continue;
+        }
+
+        throw new Error("Invalid character");
+    }
+
+    return tokens;
+}
+
+
+// ======================================================
 // CALCULATOR MODAL
 // A simple pop-up calculator for temporary on-the-fly
 // calculations. Does NOT affect or save any data.
@@ -11,9 +205,6 @@ import { useT } from "../i18n/LanguageContext";
 function CalculatorModal({ show, onClose }) {
 
     const t = useT();
-
-    const [display, setDisplay] =
-        useState("0");
 
     const [expression, setExpression] =
         useState("");
@@ -46,17 +237,16 @@ function CalculatorModal({ show, onClose }) {
             return "0";
         }
 
-        // Safe evaluation of a simple arithmetic expression
+        // Only allow calculator characters; everything else
+        // (letters, code punctuation) is stripped before the
+        // parser ever sees it.
         const sanitized =
             expr.replace(/[^0-9+\-*/.() ]/g, "");
 
         try {
 
-            // eslint-disable-next-line no-new-func
             const result =
-                Function(
-                    `"use strict"; return (${sanitized})`
-                )();
+                safeEvaluate(sanitized);
 
             return format(result);
 
@@ -125,7 +315,6 @@ function CalculatorModal({ show, onClose }) {
 
     const clearAll = () => {
         setExpression("");
-        setDisplay("0");
     };
 
 
@@ -137,7 +326,8 @@ function CalculatorModal({ show, onClose }) {
 
 
     const equals = () => {
-        setDisplay(compute(expression));
+        // The result is already live-computed above, so "="
+        // has nothing else to commit.
     };
 
 
@@ -214,13 +404,6 @@ function CalculatorModal({ show, onClose }) {
         }
 
     };
-
-
-    // Keep display in sync with expression (or final result)
-    const shownValue =
-        expression
-            ? expression
-            : display;
 
 
     return (

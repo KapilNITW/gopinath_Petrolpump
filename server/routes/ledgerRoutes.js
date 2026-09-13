@@ -103,21 +103,32 @@ router.post("/check-bulk", (req, res) => {
             return res.json({ success: true, missing: [] });
         }
 
-        const missing = [];
+        const normalized =
+            names
+                .map((raw) => String(raw || "").trim())
+                .filter(Boolean);
 
-        for (const rawName of names) {
-
-            const name = String(rawName || "").trim();
-            if (!name) continue;
-
-            const row = db.prepare(`
-                SELECT id FROM ledger_customers
-                WHERE LOWER(name) = LOWER(?)
-            `).get(name);
-
-            if (!row) missing.push(name);
-
+        if (normalized.length === 0) {
+            return res.json({ success: true, missing: [] });
         }
+
+        // One query for the whole batch instead of a
+        // prepare + get per name (SQLite allows up to 999
+        // bound params, far beyond a realistic name list).
+        const lowercased = normalized.map((name) => name.toLowerCase());
+        const placeholders = normalized.map(() => "?").join(",");
+
+        const found = db.prepare(`
+            SELECT LOWER(name) AS name
+            FROM ledger_customers
+            WHERE LOWER(name) IN (${placeholders})
+        `).all(...lowercased);
+
+        const foundSet = new Set(found.map((row) => row.name));
+
+        const missing = normalized.filter(
+            (name) => !foundSet.has(name.toLowerCase())
+        );
 
         res.json({ success: true, missing });
 

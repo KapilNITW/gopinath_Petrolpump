@@ -3,9 +3,7 @@ import CalculatorModal from "../components/CalculatorModal";
 import LedgerNamePicker from "../components/LedgerNamePicker";
 import { useT } from "../i18n/LanguageContext";
 import { getLocalDate } from "../utils/date";
-
-
-const API_URL = "http://localhost:5000/api";
+import { apiFetch } from "../services/api";
 
 
 function DailySettlement() {
@@ -110,8 +108,8 @@ function DailySettlement() {
             setMessage("");
 
 
-            const response = await fetch(
-                `${API_URL}/settlement/${date}`
+            const response = await apiFetch(
+                `/settlement/${date}`
             );
 
 
@@ -198,8 +196,8 @@ function DailySettlement() {
 
         try {
 
-            const response = await fetch(
-                `${API_URL}/udhari/${date}`
+            const response = await apiFetch(
+                `/udhari/${date}`
             );
 
 
@@ -425,20 +423,6 @@ function DailySettlement() {
 
 
     // ==================================================
-    // CALCULATED UDHARI
-    //
-    // Today's Sales
-    // - Cash
-    // - Online
-    // ==================================================
-
-    const calculatedUdhari =
-        totalSales
-        - cash
-        - online;
-
-
-    // ==================================================
     // EXPENDITURE TOTAL
     // ==================================================
 
@@ -612,11 +596,9 @@ function DailySettlement() {
 
             if (row.id) {
 
-                const response = await fetch(
-                    `${API_URL}/udhari/sale/${row.id}`,
-                    {
-                        method: "DELETE"
-                    }
+                const response = await apiFetch(
+                    `/udhari/sale/${row.id}`,
+                    { method: "DELETE" }
                 );
 
 
@@ -724,11 +706,9 @@ function DailySettlement() {
 
             if (row.id) {
 
-                const response = await fetch(
-                    `${API_URL}/udhari/credit/${row.id}`,
-                    {
-                        method: "DELETE"
-                    }
+                const response = await apiFetch(
+                    `/udhari/credit/${row.id}`,
+                    { method: "DELETE" }
                 );
 
 
@@ -855,14 +835,13 @@ function DailySettlement() {
 
             if (ledgerNames.size > 0) {
 
-                const checkResponse = await fetch(
-                    `${API_URL}/ledger/check-bulk`,
+                const checkResponse = await apiFetch(
+                    `/ledger/check-bulk`,
                     {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
+                        body: {
                             names: Array.from(ledgerNames)
-                        })
+                        }
                     }
                 );
 
@@ -994,20 +973,15 @@ function DailySettlement() {
 
 
                 const response =
-                    await fetch(
-                        `${API_URL}/udhari/sale`,
+                    await apiFetch(
+                        `/udhari/sale`,
                         {
                             method: "POST",
 
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            body: JSON.stringify({
+                            body: {
                                 saleDate: date,
                                 ...item
-                            })
+                            }
                         }
                     );
 
@@ -1044,20 +1018,15 @@ function DailySettlement() {
 
 
                 const response =
-                    await fetch(
-                        `${API_URL}/udhari/credit`,
+                    await apiFetch(
+                        `/udhari/credit`,
                         {
                             method: "POST",
 
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            body: JSON.stringify({
+                            body: {
                                 creditDate: date,
                                 ...item
-                            })
+                            }
                         }
                     );
 
@@ -1078,17 +1047,12 @@ function DailySettlement() {
             }
 
 
-            const response = await fetch(
-                `${API_URL}/settlement/save`,
+            const response = await apiFetch(
+                `/settlement/save`,
                 {
                     method: "POST",
 
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
+                    body: {
 
                         settlementDate: date,
 
@@ -1102,7 +1066,7 @@ function DailySettlement() {
                         expenditures:
                             cleanExpenditures
 
-                    })
+                    }
                 }
             );
 

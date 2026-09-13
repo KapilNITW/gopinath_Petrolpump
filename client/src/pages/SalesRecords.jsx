@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getSalesByDate } from "../services/salesService";
 import { useT } from "../i18n/LanguageContext";
 import { getLocalDate } from "../utils/date";
-
-const API_URL = "http://localhost:5000/api/sales";
+import { apiFetch } from "../services/api";
 
 
 function SalesRecords() {
@@ -27,7 +26,7 @@ function SalesRecords() {
     // LOAD RECORDS
     // ==================================================
 
-    const loadSales = async () => {
+    const loadSales = useCallback(async () => {
 
         try {
 
@@ -58,18 +57,18 @@ function SalesRecords() {
 
         }
 
-    };
+    }, [saleDate, t]);
 
 
     // ==================================================
-    // INITIAL LOAD
+    // LOAD ON MOUNT / WHEN THE DATE CHANGES
     // ==================================================
 
     useEffect(() => {
 
         loadSales();
 
-    }, []);
+    }, [loadSales]);
 
 
     // ==================================================
@@ -96,11 +95,9 @@ function SalesRecords() {
 
 
             const response =
-                await fetch(
-                    `${API_URL}/${id}`,
-                    {
-                        method: "DELETE"
-                    }
+                await apiFetch(
+                    `/sales/${id}`,
+                    { method: "DELETE" }
                 );
 
 

@@ -1,30 +1,16 @@
 import { useState, useCallback } from "react";
 import { useT } from "../i18n/LanguageContext";
-
-
-const API_URL = "http://localhost:5000/api";
+import { apiFetch } from "../services/api";
+import { formatDayDate } from "../utils/date";
+import { formatMoney } from "../utils/format";
 
 
 // ======================================================
-// HELPERS
+// HELPERS (shared formatters from utils)
 // ======================================================
 
-function formatDate(dateString) {
-    if (!dateString) return "-";
-    const [year, month, day] = dateString.split("-");
-    return new Date(
-        Number(year),
-        Number(month) - 1,
-        Number(day)
-    ).toLocaleDateString("en-IN");
-}
-
-function formatAmount(amount) {
-    return Number(amount || 0).toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-}
+const formatDate = formatDayDate;
+const formatAmount = formatMoney;
 
 
 // ======================================================
@@ -66,8 +52,8 @@ function UdhariSalesTab() {
                 params.set("date", dateFilter);
             }
 
-            const res = await fetch(
-                `${API_URL}/udhari/search/sales?${params.toString()}`
+            const res = await apiFetch(
+                `/udhari/search/sales?${params.toString()}`
             );
 
             const result = await res.json();
@@ -414,8 +400,8 @@ function UdhariCreditsTab() {
                 params.set("date", dateFilter);
             }
 
-            const res = await fetch(
-                `${API_URL}/udhari/search/credits?${params.toString()}`
+            const res = await apiFetch(
+                `/udhari/search/credits?${params.toString()}`
             );
 
             const result = await res.json();

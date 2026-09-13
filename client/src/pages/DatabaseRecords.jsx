@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useT } from "../i18n/LanguageContext";
-
-
-const API_URL = "http://localhost:5000/api";
+import { apiFetch } from "../services/api";
+import { formatPrettyDate } from "../utils/date";
+import { formatRupees } from "../utils/format";
 
 
 // ======================================================
@@ -95,12 +95,7 @@ const TABLES = [
 // HELPERS
 // ======================================================
 
-function formatDate(str) {
-    if (!str) return "-";
-    const [y, m, d] = str.split("-");
-    return new Date(Number(y), Number(m) - 1, Number(d))
-        .toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-}
+const formatDate = formatPrettyDate;
 
 function formatDatetime(str) {
     if (!str) return "-";
@@ -110,12 +105,7 @@ function formatDatetime(str) {
     });
 }
 
-function formatAmount(val) {
-    return "₹" + Number(val || 0).toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-}
+const formatAmount = formatRupees;
 
 function CellValue({ col, value }) {
 
@@ -269,7 +259,7 @@ function TableViewer({ tableDef, rowCount }) {
             if (search.trim()) params.set("search", search.trim());
             if (dateFilter)    params.set("date", dateFilter);
 
-            const res    = await fetch(`${API_URL}/db/table/${tableDef.key}?${params}`);
+            const res    = await apiFetch(`/db/table/${tableDef.key}?${params}`);
             const result = await res.json();
 
             if (!res.ok) throw new Error(result.message || "Failed to fetch");
@@ -490,7 +480,7 @@ function DatabaseRecords() {
     // --------------------------------------------------
 
     useEffect(() => {
-        fetch(`${API_URL}/db/stats`)
+        apiFetch("/db/stats")
             .then(r => r.json())
             .then(result => {
                 if (result.success) setStats(result.data);

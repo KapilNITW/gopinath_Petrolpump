@@ -5,31 +5,17 @@ import {
     printLedger
 } from "../utils/ledgerExport";
 import { useT } from "../i18n/LanguageContext";
-import { getLocalDate } from "../utils/date";
-
-
-const API_URL = "http://localhost:5000/api";
+import { getLocalDate, formatPrettyDate } from "../utils/date";
+import { formatMoney } from "../utils/format";
+import { apiFetch } from "../services/api";
 
 
 // ======================================================
-// HELPERS
+// HELPERS (shared formatters from utils)
 // ======================================================
 
-function formatDate(str) {
-    if (!str) return "-";
-    const [y, m, d] = str.split("-");
-    return new Date(Number(y), Number(m) - 1, Number(d))
-        .toLocaleDateString("en-IN", {
-            day: "2-digit", month: "short", year: "numeric"
-        });
-}
-
-function fmt(val) {
-    return Number(val || 0).toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-}
+const formatDate = formatPrettyDate;
+const fmt = formatMoney;
 
 
 // ======================================================
@@ -67,7 +53,7 @@ function CustomerList({ selected, onSelect, refreshTrigger }) {
             const params = search.trim()
                 ? `?search=${encodeURIComponent(search.trim())}`
                 : "";
-            const res    = await fetch(`${API_URL}/ledger/customers${params}`);
+            const res    = await apiFetch(`/ledger/customers${params}`);
             const result = await res.json();
             if (!res.ok) throw new Error(result.message || "Failed to load");
             setCustomers(result.data);
@@ -125,18 +111,17 @@ function CustomerList({ selected, onSelect, refreshTrigger }) {
 
             const isEdit = !!editTarget;
             const url    = isEdit
-                ? `${API_URL}/ledger/customers/${editTarget.id}`
-                : `${API_URL}/ledger/customers`;
+                ? `/ledger/customers/${editTarget.id}`
+                : `/ledger/customers`;
             const method = isEdit ? "PUT" : "POST";
 
-            const res    = await fetch(url, {
+            const res    = await apiFetch(url, {
                 method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
+                body: {
                     name:   formName.trim(),
                     mobile: formMobile.trim(),
                     notes:  formNotes.trim()
-                })
+                }
             });
             const result = await res.json();
             if (!res.ok) throw new Error(result.message || "Failed to save");
@@ -165,8 +150,8 @@ function CustomerList({ selected, onSelect, refreshTrigger }) {
         if (!window.confirm(`${t("Remove")} "${c.name}" ${t("from ledger?")}`)) return;
         try {
             setDeletingId(c.id);
-            const res    = await fetch(
-                `${API_URL}/ledger/customers/${c.id}`,
+            const res    = await apiFetch(
+                `/ledger/customers/${c.id}`,
                 { method: "DELETE" }
             );
             const result = await res.json();
@@ -442,7 +427,7 @@ function UdhariHistory({ customer }) {
         try {
             setLoading(true);
             setError("");
-            const res    = await fetch(`${API_URL}/ledger/customers/${customer.id}/udhari`);
+            const res    = await apiFetch(`/ledger/customers/${customer.id}/udhari`);
             const result = await res.json();
             if (!res.ok) throw new Error(result.message || "Failed to load");
             setData(result.data);
@@ -527,8 +512,8 @@ function UdhariHistory({ customer }) {
                     ledger:       formData.ledger
                 };
                 url    = mode === "add"
-                    ? `${API_URL}/udhari/sale`
-                    : `${API_URL}/udhari/sale/${row.id}`;
+                    ? `/udhari/sale`
+                    : `/udhari/sale/${row.id}`;
                 method = mode === "add" ? "POST" : "PUT";
 
             } else {
@@ -545,15 +530,14 @@ function UdhariHistory({ customer }) {
                     ledger:        formData.ledger
                 };
                 url    = mode === "add"
-                    ? `${API_URL}/udhari/credit`
-                    : `${API_URL}/udhari/credit/${row.id}`;
+                    ? `/udhari/credit`
+                    : `/udhari/credit/${row.id}`;
                 method = mode === "add" ? "POST" : "PUT";
             }
 
-            const res    = await fetch(url, {
+            const res    = await apiFetch(url, {
                 method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
+                body
             });
             const result = await res.json();
             if (!res.ok) throw new Error(result.message || "Failed to save");
@@ -583,10 +567,10 @@ function UdhariHistory({ customer }) {
         try {
             setDeletingId(row.id);
             const endpoint = type === "sale"
-                ? `${API_URL}/udhari/sale/${row.id}`
-                : `${API_URL}/udhari/credit/${row.id}`;
+                ? `/udhari/sale/${row.id}`
+                : `/udhari/credit/${row.id}`;
 
-            const res    = await fetch(endpoint, { method: "DELETE" });
+            const res    = await apiFetch(endpoint, { method: "DELETE" });
             const result = await res.json();
             if (!res.ok) throw new Error(result.message || "Failed to delete");
             loadData();
@@ -1110,7 +1094,10 @@ function Ledger() {
     const t = useT();
 
     const [selectedCustomer, setSelectedCustomer] = useState(null);
-    const [refreshTrigger, setRefreshTrigger]     = useState(0);
+
+    // Used as a customer-list reload signal. The setter was
+    // never invoked, so it stays 0 — keep it as a constant.
+    const refreshTrigger = 0;
 
     const handleSelect = (c) => {
         setSelectedCustomer(c);

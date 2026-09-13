@@ -1,7 +1,6 @@
-import { createContext, useState, useEffect, useCallback } from "react";
+import { createContext, useState, useEffect, useCallback, useMemo } from "react";
 import { t as translate } from "../i18n/core";
-
-const API_URL = "http://localhost:5000/api/auth";
+import { apiFetch } from "../services/api";
 
 export const AuthContext = createContext(null);
 
@@ -11,38 +10,81 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
     const [token, setToken] = useState(null);
 
-    // Restore session from localStorage on mount
+    // Restore session from localStorage on mount — but only
+    // if the server still accepts the token. A stale token
+    // (issued before the signing change) or an expired one
+    // must send the user to /login instead of rendering pages
+    // whose every request would 401.
     useEffect(() => {
 
         const savedToken =
             localStorage.getItem("auth_token");
-        const savedUser =
-            localStorage.getItem("auth_user");
 
-        if (savedToken && savedUser) {
-
-            try {
-
-                const parsed = JSON.parse(savedUser);
-
-                setToken(savedToken);
-                setUser(parsed);
-
-            } catch {
-
-                localStorage.removeItem("auth_token");
-                localStorage.removeItem("auth_user");
-
-            }
-
+        if (!savedToken) {
+            setLoading(false);
+            return;
         }
 
-        setLoading(false);
+        const clearStoredSession = () => {
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("auth_user");
+        };
+
+        apiFetch("/auth/me", {
+            method: "POST",
+            body: { token: savedToken },
+            auth: false
+        })
+            .then(res => res.json())
+            .then(result => {
+
+                if (result.success && result.user) {
+
+                    // Token is valid — adopt the server's fresh
+                    // user object (id, username stay current).
+                    setToken(savedToken);
+                    setUser(result.user);
+
+                } else {
+
+                    // Invalid / expired / unknown user.
+                    clearStoredSession();
+
+                }
+
+            })
+            .catch(() => {
+
+                // Network error (API unreachable): keep the saved
+                // session optimistically rather than logging the
+                // user out over a transient failure.
+                const savedUser =
+                    localStorage.getItem("auth_user");
+
+                setToken(savedToken);
+
+                if (savedUser) {
+                    try {
+                        setUser(JSON.parse(savedUser));
+                        return;
+                    } catch {
+                        // fall through to clearing
+                    }
+                }
+
+                clearStoredSession();
+
+            })
+            .finally(() => setLoading(false));
 
     }, []);
 
-    // Persist token/user when they change
+    // Persist token/user when they change — but stay inert
+    // while the session-restore check is in flight, so a mount
+    // never wipes a saved session before it's validated.
     useEffect(() => {
+
+        if (loading) return;
 
         if (token && user) {
             localStorage.setItem("auth_token", token);
@@ -52,19 +94,17 @@ export function AuthProvider({ children }) {
             localStorage.removeItem("auth_user");
         }
 
-    }, [token, user]);
+    }, [token, user, loading]);
 
     const login = useCallback(
         async (username, password) => {
 
-            const response = await fetch(
-                `${API_URL}/login`,
+            const response = await apiFetch(
+                "/auth/login",
                 {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ username, password })
+                    body: { username, password },
+                    auth: false
                 }
             );
 
@@ -98,18 +138,12 @@ export function AuthProvider({ children }) {
     const signup = useCallback(
         async (username, password, mobile) => {
 
-            const response = await fetch(
-                `${API_URL}/signup`,
+            const response = await apiFetch(
+                "/auth/signup",
                 {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        username,
-                        password,
-                        mobile
-                    })
+                    body: { username, password, mobile },
+                    auth: false
                 }
             );
 
@@ -131,14 +165,12 @@ export function AuthProvider({ children }) {
     const verifyOTP = useCallback(
         async (mobile, otp) => {
 
-            const response = await fetch(
-                `${API_URL}/verify-otp`,
+            const response = await apiFetch(
+                "/auth/verify-otp",
                 {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ mobile, otp })
+                    body: { mobile, otp },
+                    auth: false
                 }
             );
 
@@ -160,14 +192,12 @@ export function AuthProvider({ children }) {
     const resendOTP = useCallback(
         async (mobile) => {
 
-            const response = await fetch(
-                `${API_URL}/resend-otp`,
+            const response = await apiFetch(
+                "/auth/resend-otp",
                 {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ mobile })
+                    body: { mobile },
+                    auth: false
                 }
             );
 
@@ -195,20 +225,18 @@ export function AuthProvider({ children }) {
             otp
         ) => {
 
-            const response = await fetch(
-                `${API_URL}/change-password`,
+            const response = await apiFetch(
+                "/auth/change-password",
                 {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
+                    body: {
                         username,
                         currentPassword,
                         newPassword,
                         mobile,
                         otp
-                    })
+                    },
+                    auth: false
                 }
             );
 
@@ -230,14 +258,12 @@ export function AuthProvider({ children }) {
     const adminLogin = useCallback(
         async (username, password) => {
 
-            const response = await fetch(
-                `${API_URL}/admin/login`,
+            const response = await apiFetch(
+                "/auth/admin/login",
                 {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ username, password })
+                    body: { username, password },
+                    auth: false
                 }
             );
 
@@ -274,7 +300,10 @@ export function AuthProvider({ children }) {
 
     }, []);
 
-    const value = {
+    // Memoized so consumers (Navbar, routes, every page)
+    // only re-render when auth state actually changes, not
+    // on every AuthProvider render.
+    const value = useMemo(() => ({
         user,
         token,
         loading,
@@ -285,7 +314,18 @@ export function AuthProvider({ children }) {
         resendOTP,
         changePassword,
         logout
-    };
+    }), [
+        user,
+        token,
+        loading,
+        login,
+        adminLogin,
+        signup,
+        verifyOTP,
+        resendOTP,
+        changePassword,
+        logout
+    ]);
 
     return (
         <AuthContext.Provider value={value}>

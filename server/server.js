@@ -17,13 +17,50 @@ const udhariRoutes       = require("./routes/udhariRoutes");
 const dbRoutes           = require("./routes/dbRoutes");
 const ledgerRoutes       = require("./routes/ledgerRoutes");
 
+const {
+    requireAuth,
+    requireAdmin
+} = require("./middleware/authMiddleware");
+
 
 const app = express();
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
+// Only the app origin(s) may call this API. A locked-down
+// CORS policy plus a signed token on every business route
+// (mounted below) closes the two biggest exposure gaps.
+//
+// CORS_ORIGIN may hold a comma-separated allowlist. Outside
+// production we also accept any loopback origin, because Vite
+// silently bumps to :5174/:5175 when its port is taken — and
+// refusing the app's own page would be a self-inflicted outage.
+// Foreign origins are still denied outright either way.
+const CORS_ORIGINS =
+    (process.env.CORS_ORIGIN || "http://localhost:5173")
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
 
-app.use(cors());
+const LOOPBACK_ORIGIN =
+    /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i;
+
+// Function-form origin so a foreign origin is actually
+// DENIED (no usable ACAO header), not just sent a fixed
+// header it can't use. Non-browser callers (curl, no
+// Origin header) are allowed — same as the default.
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);           // curl / no Origin
+        if (CORS_ORIGINS.includes(origin)) return callback(null, true);
+        if (process.env.NODE_ENV !== "production" && LOOPBACK_ORIGIN.test(origin)) {
+            return callback(null, true);
+        }
+        callback(null, false);
+    }
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
@@ -44,6 +81,7 @@ app.use(
 
 app.use(
     "/api/sales",
+    requireAuth,
     salesRoutes
 );
 
@@ -54,6 +92,7 @@ app.use(
 
 app.use(
     "/api/settlement",
+    requireAuth,
     settlementRoutes
 );
 
@@ -64,6 +103,7 @@ app.use(
 
 app.use(
     "/api/udhari",
+    requireAuth,
     udhariRoutes
 );
 
@@ -74,6 +114,7 @@ app.use(
 
 app.use(
     "/api/db",
+    requireAuth,
     dbRoutes
 );
 
@@ -84,6 +125,7 @@ app.use(
 
 app.use(
     "/api/ledger",
+    requireAuth,
     ledgerRoutes
 );
 
@@ -103,66 +145,11 @@ app.get("/api/health", (req, res) => {
 
 
 // ======================================================
-// ADMIN AUTH HELPER (for admin-only endpoints)
-// ======================================================
-
-function requireAdmin(req, res) {
-
-    const authHeader =
-        req.headers["authorization"];
-
-    const token = authHeader?.startsWith("Bearer ")
-        ? authHeader.substring(7)
-        : authHeader;
-
-    if (!token) {
-        res.status(401).json({
-            success: false,
-            message: "Admin token required"
-        });
-        return false;
-    }
-
-    try {
-
-        const decoded = JSON.parse(
-            Buffer.from(token, "base64").toString()
-        );
-
-        if (decoded.role !== "admin") {
-            res.status(403).json({
-                success: false,
-                message: "Admin access required"
-            });
-            return false;
-        }
-
-        return true;
-
-    } catch {
-
-        res.status(401).json({
-            success: false,
-            message: "Invalid admin token"
-        });
-
-        return false;
-
-    }
-
-}
-
-
-// ======================================================
 // MANUAL BACKUP (admin only)
 // Lets the admin trigger a backup anytime from the UI.
 // ======================================================
 
-app.post("/api/backup", (req, res) => {
-
-    if (!requireAdmin(req, res)) {
-        return;
-    }
+app.post("/api/backup", requireAdmin, (req, res) => {
 
     const result = backup.backupDatabase();
 
@@ -177,11 +164,7 @@ app.post("/api/backup", (req, res) => {
 // db folder doesn't keep old pre-restore snapshots around.
 // ======================================================
 
-app.post("/api/safety-backups/delete-all", (req, res) => {
-
-    if (!requireAdmin(req, res)) {
-        return;
-    }
+app.post("/api/safety-backups/delete-all", requireAdmin, (req, res) => {
 
     try {
 
@@ -210,11 +193,7 @@ app.post("/api/safety-backups/delete-all", (req, res) => {
 // GOOGLE DRIVE: CONNECTION STATUS (admin only)
 // ======================================================
 
-app.get("/api/drive/status", (req, res) => {
-
-    if (!requireAdmin(req, res)) {
-        return;
-    }
+app.get("/api/drive/status", requireAdmin, (req, res) => {
 
     res.json({
         success: true,
@@ -228,11 +207,7 @@ app.get("/api/drive/status", (req, res) => {
 // GOOGLE DRIVE: GET CONNECT URL (admin only)
 // ======================================================
 
-app.get("/api/drive/auth-url", (req, res) => {
-
-    if (!requireAdmin(req, res)) {
-        return;
-    }
+app.get("/api/drive/auth-url", requireAdmin, (req, res) => {
 
     try {
 
@@ -259,11 +234,7 @@ app.get("/api/drive/auth-url", (req, res) => {
 // GOOGLE DRIVE: SAVE AUTH CODE (admin only)
 // ======================================================
 
-app.post("/api/drive/auth-code", async (req, res) => {
-
-    if (!requireAdmin(req, res)) {
-        return;
-    }
+app.post("/api/drive/auth-code", requireAdmin, async (req, res) => {
 
     try {
 
@@ -303,11 +274,7 @@ app.post("/api/drive/auth-code", async (req, res) => {
 // GOOGLE DRIVE: UPLOAD latest DB (admin only)
 // ======================================================
 
-app.post("/api/drive/upload", async (req, res) => {
-
-    if (!requireAdmin(req, res)) {
-        return;
-    }
+app.post("/api/drive/upload", requireAdmin, async (req, res) => {
 
     try {
 
@@ -342,11 +309,7 @@ app.post("/api/drive/upload", async (req, res) => {
 // GOOGLE DRIVE: DOWNLOAD & RESTORE latest DB (admin only)
 // ======================================================
 
-app.post("/api/drive/download", async (req, res) => {
-
-    if (!requireAdmin(req, res)) {
-        return;
-    }
+app.post("/api/drive/download", requireAdmin, async (req, res) => {
 
     try {
 
@@ -379,6 +342,43 @@ app.post("/api/drive/download", async (req, res) => {
         });
 
     }
+
+});
+
+
+// ======================================================
+// 404 HANDLER
+// Unknown routes get a clean JSON response instead of the
+// default Express HTML page.
+// ======================================================
+
+app.use((req, res) => {
+
+    res.status(404).json({
+        success: false,
+        message: "Route not found"
+    });
+
+});
+
+
+// ======================================================
+// CENTRAL ERROR HANDLER
+// Any error thrown in a route lands here, so a stack
+// trace is never leaked to the client — always a clean
+// { success: false, message } response.
+// ======================================================
+
+app.use((err, req, res, next) => {
+
+    console.error("API error:", err.message);
+
+    res.status(err.status || 500).json({
+        success: false,
+        message:
+            err.message ||
+            "Internal server error"
+    });
 
 });
 
